@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shiftworks · Breakwater Watch</title>
+<style>
+  :root{
+    --bg:#151210;
+    --paper:#f3ece4;
+    --panel:#fff9f2;
+    --ink:#1d1814;
+    --muted:#5d5550;
+    --line:rgba(29,24,20,.12);
+    --sea1:#496977;
+    --sea2:#264a5e;
+    --sea3:#193443;
+    --dock:#c38d5d;
+    --good:#6f8b63;
+    --warn:#d0a457;
+    --bad:#9b6a5f;
+    --shadow:0 22px 48px rgba(0,0,0,.12);
+    --radius:26px;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;min-height:100%;
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at top left, rgba(195,141,93,.16), transparent 18%),
+      radial-gradient(circle at top right, rgba(73,105,119,.12), transparent 18%),
+      linear-gradient(180deg,#efe7dc,#e7ddd1 48%,#ddd5ca 100%);
+  }
+  body{padding:16px}
+  .shell{max-width:1340px;margin:0 auto}
+  .topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .back{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;text-decoration:none;color:#fff;background:#241d18;border:1px solid rgba(255,255,255,.08);font-weight:700}
+  .credit{font-size:.92rem;color:#3f3731}
+  .credit strong{color:#1d1814}
+  .layout{display:grid;grid-template-columns:320px minmax(0,1fr) 340px;gap:16px}
+  .panel{border-radius:var(--radius);background:rgba(255,255,255,.78);border:1px solid var(--line);box-shadow:var(--shadow)}
+  .pad{padding:18px}
+  .kicker{text-transform:uppercase;letter-spacing:.18em;font-size:.74rem;font-weight:800;color:#8a6541}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;letter-spacing:.01em}
+  h1{margin:.25rem 0 0;font-size:clamp(2rem,3.7vw,3rem)}
+  h2{margin:0;font-size:1.48rem}
+  h3{margin:0 0 6px;font-size:1.02rem}
+  .subtitle{margin-top:10px;color:#433a34;line-height:1.62}
+  .howGrid{display:grid;gap:10px;margin-top:14px}
+  .howStep{padding:12px 14px;border-radius:18px;background:#fff;border:1px solid rgba(29,24,20,.08)}
+  .howStep > strong{display:block;margin-bottom:4px}
+  .meterGrid{display:grid;gap:12px;margin-top:16px}
+  .meter{padding:14px;border-radius:18px;background:#fff;border:1px solid rgba(29,24,20,.08)}
+  .meter span{display:flex;justify-content:space-between;gap:10px;font-size:.86rem;color:#564d47}
+  .bar{height:10px;border-radius:999px;background:rgba(29,24,20,.08);overflow:hidden;margin-top:10px}
+  .bar>div{height:100%;border-radius:inherit}
+  .barCalm{background:linear-gradient(90deg,#6f8b63,#93b48c)}
+  .barBacklog{background:linear-gradient(90deg,#d0a457,#b57442)}
+  .barTrust{background:linear-gradient(90deg,#496977,#7da6b6)}
+  .brief,.status,.quickStart,.summary{margin-top:14px;padding:14px;border-radius:18px;border:1px solid rgba(29,24,20,.08);background:#fff}
+  .quickStart > strong{display:block;margin-bottom:6px}
+  .feedbackCard > strong{display:block;margin-bottom:4px}
+  .quickStart{background:rgba(195,141,93,.09);border-color:rgba(195,141,93,.18)}
+  .status{background:rgba(73,105,119,.06)}
+  .tiny{font-size:.88rem;color:#5a524d;line-height:1.58}
+  .actionRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button{appearance:none;border:none;border-radius:16px;padding:12px 14px;font:inherit;cursor:pointer;background:#fff;border:1px solid rgba(29,24,20,.1);color:var(--ink);font-weight:700;touch-action:manipulation}
+  button.primary{background:#221b17;color:#fff}
+  button.soft{background:#ece5db}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .log{display:grid;gap:10px;margin-top:16px;max-height:240px;overflow:auto;padding-right:4px}
+  .logItem{padding:12px;border-radius:16px;background:#fff;border:1px solid rgba(29,24,20,.08);font-size:.88rem;color:#4d453f}
+
+  .sceneHead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;padding:18px 18px 0}
+  .pillRow{display:flex;gap:10px;flex-wrap:wrap}
+  .pill{padding:8px 11px;border-radius:999px;background:#fff;border:1px solid rgba(29,24,20,.08);font-size:.82rem}
+  .sceneWrap{padding:14px}
+  .scene{
+    position:relative;overflow:hidden;border-radius:24px;border:1px solid rgba(29,24,20,.1);
+    background:
+      linear-gradient(180deg,#d8d3cd 0 28%, transparent 28%),
+      linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 50%),
+      linear-gradient(180deg,var(--sea1),var(--sea2) 55%,var(--sea3));
+    min-height:430px;
+  }
+  .scene svg{width:100%;height:auto;display:block}
+  .laneLabels{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+  .laneLabel{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.82);font-size:.8rem;font-weight:700;color:#2a241f;border:1px solid rgba(29,24,20,.08)}
+  .boatTag{font-size:12px;font-weight:800;fill:#1d1814;font-family:"Segoe UI",sans-serif}
+  .boatBody{stroke:#fff;stroke-width:3}
+  .wake{stroke:rgba(255,255,255,.4);stroke-width:2;stroke-linecap:round}
+  .dockGlow{fill:rgba(195,141,93,.16)}
+  .waitGlow{fill:rgba(255,255,255,.18)}
+  .ignoreGlow{fill:rgba(255,255,255,.12)}
+  .sceneNote{padding:0 18px 18px;color:#453d37;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .sceneNote > div > strong{display:block;margin-bottom:4px}
+  .feedback{display:none;margin:0 18px 18px;padding:16px;border-radius:18px;background:#fff;border:1px solid rgba(29,24,20,.08)}
+  .feedback.good{border-color:rgba(111,139,99,.42);background:rgba(111,139,99,.08)}
+  .feedback.mid{border-color:rgba(208,164,87,.42);background:rgba(208,164,87,.08)}
+  .feedback.bad{border-color:rgba(155,106,95,.42);background:rgba(155,106,95,.08)}
+  .feedbackGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+  .feedbackCard{padding:12px;border-radius:16px;background:rgba(255,255,255,.84);border:1px solid rgba(29,24,20,.08)}
+
+  .cardGrid{display:grid;gap:12px;margin-top:14px}
+  .signalCard{padding:14px;border-radius:20px;background:#fff;border:1px solid rgba(29,24,20,.08)}
+  .signalCard.active{box-shadow:0 0 0 2px rgba(73,105,119,.16) inset}
+  .signalMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{padding:5px 8px;border-radius:999px;background:#f7f3ee;border:1px solid rgba(29,24,20,.08);font-size:.74rem}
+  .sliderWrap{margin-top:12px}
+  input[type="range"]{width:100%;accent-color:#496977;touch-action:manipulation}
+  .ticks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:.78rem;color:#625954;margin-top:6px;text-align:center}
+  .choicePill{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:8px 11px;border-radius:999px;background:#f4efe8;border:1px solid rgba(29,24,20,.08);font-size:.82rem;font-weight:700}
+  .choiceDot{width:10px;height:10px;border-radius:999px;background:#496977}
+  .choiceDot.wait{background:#d0a457}
+  .choiceDot.ignore{background:#8f999e}
+  .legend{display:grid;gap:10px;margin-top:14px}
+  .legendItem{padding:12px 13px;border-radius:16px;background:#fff;border:1px solid rgba(29,24,20,.08)}
+  .legendItem > strong{display:block;margin-bottom:4px}
+  .summary{display:none}
+  .summaryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+  @media (max-width:1160px){.layout{grid-template-columns:1fr}}
+  @media (max-width:760px){
+    body{padding:10px}
+    .scene{min-height:360px}
+    .feedbackGrid,.summaryGrid{grid-template-columns:1fr}
+    .pillRow{width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <a class="back" href="index.html">Back to Shiftworks</a>
+    <div class="credit">Created by <strong>Ishan Bangroo</strong> · Module 5 · Slider-based harbor watch</div>
+  </div>
+
+  <div class="layout">
+    <aside class="panel pad">
+      <div class="kicker">What to do</div>
+      <h2>Breakwater Watch</h2>
+      <p class="subtitle">Keep the harbor calm for 4 short rounds. Move the 3 sliders so <strong>one signal docks now</strong>, <strong>one waits outside</strong>, and <strong>one is ignored</strong>.</p>
+
+      <div class="howGrid">
+        <div class="howStep"><strong>1. Read the three signal cards</strong><div class="tiny">Each card tells you what just reached the harbor.</div></div>
+        <div class="howStep"><strong>2. Drag each slider</strong><div class="tiny">Pick <strong>Ignore</strong>, <strong>Wait outside</strong>, or <strong>Dock now</strong>.</div></div>
+        <div class="howStep"><strong>3. Check the round</strong><div class="tiny">You get the best score when you do not treat everything like an emergency.</div></div>
+      </div>
+
+      <div class="quickStart"><strong>Worked example</strong><div class="tiny">A medical transfer should <strong>Dock now</strong>. A supply boat can <strong>Wait outside</strong>. A repeat radio ping can be <strong>Ignored</strong>.</div></div>
+
+      <div class="meterGrid">
+        <div class="meter"><span><strong>Harbor calm</strong><span id="calmText">66</span></span><div class="bar"><div id="calmBar" class="barCalm" style="width:66%"></div></div></div>
+        <div class="meter"><span><strong>Backlog</strong><span id="backlogText">18</span></span><div class="bar"><div id="backlogBar" class="barBacklog" style="width:18%"></div></div></div>
+        <div class="meter"><span><strong>Trust</strong><span id="trustText">58</span></span><div class="bar"><div id="trustBar" class="barTrust" style="width:58%"></div></div></div>
+      </div>
+
+      <div class="brief"><strong id="roundLabel">Round 1 of 4</strong><div class="tiny" id="whyText">This round helps you practice one simple move: pick what needs action now, what can wait, and what is only making noise.</div></div>
+
+      <div class="actionRow">
+        <button class="primary" id="checkBtn">Check round</button>
+        <button class="soft" id="nextBtn" style="display:none">Next round</button>
+        <button class="soft" id="exportBtn">Save session notes</button>
+        <button class="soft" id="resetBtn">Restart</button>
+      </div>
+
+      <div class="status" id="statusBox">Start by moving the three sliders. You need one Dock now, one Wait outside, and one Ignore.</div>
+      <div class="log" id="log"></div>
+    </aside>
+
+    <section class="panel">
+      <div class="sceneHead">
+        <div>
+          <div class="kicker">Night harbor</div>
+          <h1>Three signals, one clean board</h1>
+          <p class="subtitle">This game helps with one useful habit: <strong>not letting every ping feel urgent</strong>. When everything looks like an emergency, overload grows fast. This board lets you practice choosing what is <strong>now</strong>, what can <strong>wait</strong>, and what is just <strong>noise</strong>.</p>
+        </div>
+        <div class="pillRow">
+          <div class="pill" id="scorePill">Score 0</div>
+          <div class="pill" id="perfectPill">Perfect rounds 0</div>
+        </div>
+      </div>
+      <div class="sceneWrap">
+        <div class="scene">
+          <div class="laneLabels">
+            <div class="laneLabel">Ignore</div>
+            <div class="laneLabel">Wait outside</div>
+            <div class="laneLabel">Dock now</div>
+          </div>
+          <svg viewBox="0 0 860 430" aria-label="Harbor scene">
+            <defs>
+              <linearGradient id="seaBand" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#23404e" />
+                <stop offset="52%" stop-color="#335766" />
+                <stop offset="100%" stop-color="#193543" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="118" width="860" height="312" fill="url(#seaBand)"></rect>
+            <rect x="610" y="132" width="210" height="220" rx="18" fill="#c38d5d"></rect>
+            <rect x="630" y="152" width="60" height="180" rx="12" fill="#8f6547"></rect>
+            <rect x="708" y="152" width="60" height="180" rx="12" fill="#8f6547"></rect>
+            <circle class="waitGlow" cx="395" cy="238" r="62"></circle>
+            <circle class="ignoreGlow" cx="110" cy="238" r="54"></circle>
+            <rect x="20" y="346" width="220" height="48" rx="20" fill="rgba(255,255,255,.12)"></rect>
+            <text x="130" y="376" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#f8f4ef">Open water</text>
+            <rect x="300" y="346" width="190" height="48" rx="20" fill="rgba(255,255,255,.15)"></rect>
+            <text x="395" y="376" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#f8f4ef">Outer wait line</text>
+            <rect x="642" y="346" width="146" height="48" rx="20" fill="rgba(255,255,255,.18)"></rect>
+            <text x="715" y="376" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="15" font-weight="700" fill="#1d1814">Dock</text>
+            <g id="boat0" transform="translate(110 170)">
+              <line class="wake" x1="-26" y1="12" x2="-44" y2="12"></line>
+              <line class="wake" x1="-24" y1="20" x2="-40" y2="20"></line>
+              <rect class="boatBody" x="-22" y="0" width="50" height="28" rx="11" fill="#d3a76e"></rect>
+              <text class="boatTag" x="3" y="48" text-anchor="middle" id="boatLabel0">A</text>
+            </g>
+            <g id="boat1" transform="translate(110 238)">
+              <line class="wake" x1="-26" y1="12" x2="-44" y2="12"></line>
+              <line class="wake" x1="-24" y1="20" x2="-40" y2="20"></line>
+              <rect class="boatBody" x="-22" y="0" width="50" height="28" rx="11" fill="#77a2b1"></rect>
+              <text class="boatTag" x="3" y="48" text-anchor="middle" id="boatLabel1">B</text>
+            </g>
+            <g id="boat2" transform="translate(110 306)">
+              <line class="wake" x1="-26" y1="12" x2="-44" y2="12"></line>
+              <line class="wake" x1="-24" y1="20" x2="-40" y2="20"></line>
+              <rect class="boatBody" x="-22" y="0" width="50" height="28" rx="11" fill="#b57f74"></rect>
+              <text class="boatTag" x="3" y="48" text-anchor="middle" id="boatLabel2">C</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="sceneNote">
+        <div>
+          <strong>Live preview</strong>
+          <div class="tiny">As you move the sliders, the boats shift between <strong>Ignore</strong>, <strong>Wait outside</strong>, and <strong>Dock now</strong>.</div>
+        </div>
+        <div>
+          <strong>Good round rule</strong>
+          <div class="tiny">The best rounds keep exactly <strong>one boat in each lane</strong>.</div>
+        </div>
+      </div>
+      <div class="feedback" id="feedbackBox"></div>
+    </section>
+
+    <aside class="panel pad">
+      <div class="kicker">Move the sliders</div>
+      <h2>Signal cards</h2>
+      <p class="subtitle">Each round gives you three signals. Use the sliders to show what happens next. Keep it simple: <strong>one now</strong>, <strong>one wait</strong>, <strong>one noise</strong>.</p>
+      <div class="cardGrid" id="cardGrid"></div>
+      <div class="legend">
+        <div class="legendItem"><strong>What this game helps practice</strong><div class="tiny">Picking what needs action now. Letting safe things wait. Not giving noise the same power as a real need.</div></div>
+        <div class="legendItem"><strong>When you score well</strong><div class="tiny">You keep the harbor calm, backlog low, and trust steady. You do that by resisting the urge to dock everything at once.</div></div>
+      </div>
+      <div class="summary" id="summaryBox"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const IGNORE = 0, WAIT = 50, DOCK = 100;
+  const labelFor = (value) => value === DOCK ? 'Dock now' : value === WAIT ? 'Wait outside' : 'Ignore';
+  const classFor = (value) => value === DOCK ? 'dock' : value === WAIT ? 'wait' : 'ignore';
+  const xFor = (value) => value === DOCK ? 705 : value === WAIT ? 395 : 110;
+  const rounds = [
+    {
+      why: 'Start with the basic skill: one live need, one safe wait, and one repeat signal that does not deserve the dock.',
+      example: 'Medical transfer → Dock now. Supply boat → Wait outside. Repeat radio ping → Ignore.',
+      signals: [
+        { id:'r1a', code:'A', title:'Medical transfer', detail:'One person on board needs the dock now.', best: DOCK },
+        { id:'r1b', code:'B', title:'Supply boat', detail:'Useful, but safe to hold outside for a short wait.', best: WAIT },
+        { id:'r1c', code:'C', title:'Repeat radio ping', detail:'Same message again. Already logged.', best: IGNORE }
+      ]
+    },
+    {
+      why: 'This round is about not letting routine work crowd out a real arrival.',
+      example: 'Urgent lab courier → Dock now. Staff shuttle → Wait outside. Old alert copy → Ignore.',
+      signals: [
+        { id:'r2a', code:'A', title:'Urgent lab courier', detail:'The cargo matters now and loses value if it waits.', best: DOCK },
+        { id:'r2b', code:'B', title:'Staff shuttle', detail:'It arrived early. It can wait outside without harm.', best: WAIT },
+        { id:'r2c', code:'C', title:'Old alert copy', detail:'This alert already cleared. It is only noise now.', best: IGNORE }
+      ]
+    },
+    {
+      why: 'This round checks whether you can protect space for a real handoff instead of reacting to every loud thing.',
+      example: 'Night handoff boat → Dock now. Routine cleaning barge → Wait outside. Rumor call → Ignore.',
+      signals: [
+        { id:'r3a', code:'A', title:'Night handoff boat', detail:'A shift handoff bag needs a clean dock and owner now.', best: DOCK },
+        { id:'r3b', code:'B', title:'Routine cleaning barge', detail:'Useful work, but it can wait for the next opening.', best: WAIT },
+        { id:'r3c', code:'C', title:'Rumor call', detail:'Loud voice, no location, no clear need.', best: IGNORE }
+      ]
+    },
+    {
+      why: 'Finish by keeping a real delivery moving while refusing to inflate a cleared alert.',
+      example: 'Medication cooler → Dock now. Staff pickup → Wait outside. Auto alert already cleared → Ignore.',
+      signals: [
+        { id:'r4a', code:'A', title:'Medication cooler', detail:'Needs the dock now to stay usable.', best: DOCK },
+        { id:'r4b', code:'B', title:'Staff pickup', detail:'The boat is on time, but it can wait a short while outside.', best: WAIT },
+        { id:'r4c', code:'C', title:'Cleared auto alert', detail:'The system is repeating something that is already done.', best: IGNORE }
+      ]
+    }
+  ];
+
+  const els = {
+    calmText: document.getElementById('calmText'),
+    backlogText: document.getElementById('backlogText'),
+    trustText: document.getElementById('trustText'),
+    calmBar: document.getElementById('calmBar'),
+    backlogBar: document.getElementById('backlogBar'),
+    trustBar: document.getElementById('trustBar'),
+    roundLabel: document.getElementById('roundLabel'),
+    whyText: document.getElementById('whyText'),
+    checkBtn: document.getElementById('checkBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    statusBox: document.getElementById('statusBox'),
+    log: document.getElementById('log'),
+    scorePill: document.getElementById('scorePill'),
+    perfectPill: document.getElementById('perfectPill'),
+    cardGrid: document.getElementById('cardGrid'),
+    summaryBox: document.getElementById('summaryBox'),
+    feedbackBox: document.getElementById('feedbackBox'),
+    boatGroups: [document.getElementById('boat0'), document.getElementById('boat1'), document.getElementById('boat2')],
+    boatLabels: [document.getElementById('boatLabel0'), document.getElementById('boatLabel1'), document.getElementById('boatLabel2')]
+  };
+
+  const state = {
+    round: 0,
+    score: 0,
+    perfectRounds: 0,
+    calm: 66,
+    backlog: 18,
+    trust: 58,
+    choices: {},
+    logs: [],
+    telemetry: [],
+    over: false,
+    resolved: false
+  };
+
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+  function currentRound(){ return rounds[state.round] || null; }
+  function setStatus(text){ els.statusBox.textContent = text; }
+  function record(type, payload){ state.telemetry.push(Object.assign({ type, round: state.round + 1, at: new Date().toISOString() }, payload || {})); }
+  function log(text){ state.logs.unshift(text); state.logs = state.logs.slice(0, 8); els.log.innerHTML = state.logs.map(item => `<div class="logItem">${item}</div>`).join(''); }
+
+  function updateMeters(){
+    els.calmText.textContent = state.calm;
+    els.backlogText.textContent = state.backlog;
+    els.trustText.textContent = state.trust;
+    els.calmBar.style.width = `${state.calm}%`;
+    els.backlogBar.style.width = `${state.backlog}%`;
+    els.trustBar.style.width = `${state.trust}%`;
+    els.scorePill.textContent = `Score ${state.score}`;
+    els.perfectPill.textContent = `Perfect rounds ${state.perfectRounds}`;
+    els.roundLabel.textContent = `Round ${Math.min(state.round + 1, rounds.length)} of ${rounds.length}`;
+    els.whyText.textContent = currentRound() ? currentRound().why : 'Run complete.';
+  }
+
+  function syncBoats(){
+    const round = currentRound();
+    if(!round) return;
+    round.signals.forEach((signal, idx) => {
+      const choice = state.choices[signal.id] ?? WAIT;
+      const x = xFor(choice);
+      const y = 170 + (idx * 68);
+      els.boatGroups[idx].setAttribute('transform', `translate(${x} ${y})`);
+      els.boatLabels[idx].textContent = signal.code;
+    });
+  }
+
+  function renderCards(){
+    const round = currentRound();
+    if(!round) return;
+    els.cardGrid.innerHTML = round.signals.map(signal => {
+      const value = state.choices[signal.id] ?? WAIT;
+      return `
+        <div class="signalCard ${state.resolved ? '' : 'active'}" data-card="${signal.id}">
+          <h3>${signal.code}. ${signal.title}</h3>
+          <div class="tiny">${signal.detail}</div>
+          <div class="signalMeta">
+            <span class="chip">Goal: choose one lane</span>
+            <span class="chip">Current: ${labelFor(value)}</span>
+          </div>
+          <div class="sliderWrap">
+            <input type="range" min="0" max="100" step="50" value="${value}" data-slider="${signal.id}" ${state.resolved ? 'disabled' : ''}>
+            <div class="ticks"><span>Ignore</span><span>Wait outside</span><span>Dock now</span></div>
+            <div class="choicePill"><span class="choiceDot ${classFor(value)}"></span>${labelFor(value)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    els.cardGrid.querySelectorAll('[data-slider]').forEach(slider => {
+      slider.addEventListener('input', () => {
+        const snapped = Number(slider.value);
+        state.choices[slider.dataset.slider] = snapped;
+        renderCards();
+        syncBoats();
+        validateRound();
+      }, { passive: true });
+    });
+  }
+
+  function validateRound(){
+    const round = currentRound();
+    if(!round || state.over || state.resolved){
+      els.checkBtn.disabled = true;
+      return;
+    }
+    const values = round.signals.map(signal => state.choices[signal.id]);
+    const ready = values.every(v => v === IGNORE || v === WAIT || v === DOCK);
+    els.checkBtn.disabled = !ready;
+    if(!ready){
+      setStatus('Move all three sliders first.');
+      return;
+    }
+    const ignoreCount = values.filter(v => v === IGNORE).length;
+    const waitCount = values.filter(v => v === WAIT).length;
+    const dockCount = values.filter(v => v === DOCK).length;
+    if(ignoreCount === 1 && waitCount === 1 && dockCount === 1){
+      setStatus('Good. You have one boat in each lane. Press Check round.');
+    } else {
+      setStatus('Try to keep one boat in each lane: one Ignore, one Wait outside, one Dock now.');
+    }
+  }
+
+  function resolveRound(){
+    if(state.over || state.resolved) return;
+    const round = currentRound();
+    const values = round.signals.map(signal => state.choices[signal.id]);
+    if(values.some(v => v === undefined)){
+      setStatus('Move all three sliders first.');
+      return;
+    }
+    state.resolved = true;
+    const results = round.signals.map(signal => ({
+      title: signal.title,
+      got: state.choices[signal.id],
+      best: signal.best,
+      correct: state.choices[signal.id] === signal.best
+    }));
+    const hits = results.filter(r => r.correct).length;
+    const pattern = [IGNORE, WAIT, DOCK].every(v => values.filter(x => x === v).length === 1);
+    let grade = 'bad';
+    let headline = 'Too many signals got the wrong lane.';
+    let body = 'The board gets harder when noise, safe waits, and real needs all get treated the same.';
+    if(hits === 3 && pattern){
+      grade = 'good';
+      headline = 'Clean round.';
+      body = 'You kept one boat moving, one boat waiting safely, and one noisy signal out of the dock.';
+      state.score += 30;
+      state.perfectRounds += 1;
+      state.calm = clamp(state.calm + 8, 0, 100);
+      state.backlog = clamp(state.backlog - 6, 0, 100);
+      state.trust = clamp(state.trust + 8, 0, 100);
+    } else if(hits >= 2){
+      grade = 'mid';
+      headline = 'Mostly right.';
+      body = 'You caught most of the round, but one lane choice made the board noisier than it needed to be.';
+      state.score += 16;
+      state.calm = clamp(state.calm + 2, 0, 100);
+      state.backlog = clamp(state.backlog + 2, 0, 100);
+      state.trust = clamp(state.trust + 2, 0, 100);
+    } else {
+      state.score += 4;
+      state.calm = clamp(state.calm - 8, 0, 100);
+      state.backlog = clamp(state.backlog + 8, 0, 100);
+      state.trust = clamp(state.trust - 6, 0, 100);
+    }
+    els.feedbackBox.className = `feedback ${grade}`;
+    els.feedbackBox.style.display = 'block';
+    els.feedbackBox.innerHTML = `
+      <strong>${headline}</strong>
+      <div class="tiny" style="margin-top:6px">${body}</div>
+      <div class="feedbackGrid">
+        ${results.map(result => `
+          <div class="feedbackCard">
+            <strong>${result.title}</strong>
+            <div class="tiny">You chose: <strong>${labelFor(result.got)}</strong></div>
+            <div class="tiny">Best lane: <strong>${labelFor(result.best)}</strong></div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    setStatus(`${headline} ${body}`);
+    log(`Round ${state.round + 1}: ${hits}/3 lane choices matched.`);
+    record('resolve', { hits, choices: Object.assign({}, state.choices) });
+    updateMeters();
+    els.checkBtn.style.display = 'none';
+    els.nextBtn.style.display = 'inline-flex';
+    if(state.round === rounds.length - 1 || state.calm <= 20 || state.trust <= 20 || state.backlog >= 80){
+      els.nextBtn.textContent = 'Finish run';
+    } else {
+      els.nextBtn.textContent = 'Next round';
+    }
+  }
+
+  function nextRound(){
+    if(state.over) return;
+    if(state.round === rounds.length - 1 || state.calm <= 20 || state.trust <= 20 || state.backlog >= 80){
+      finishRun();
+      return;
+    }
+    state.round += 1;
+    state.resolved = false;
+    const next = currentRound();
+    state.choices = Object.fromEntries(next.signals.map(signal => [signal.id, WAIT]));
+    els.feedbackBox.style.display = 'none';
+    els.checkBtn.style.display = 'inline-flex';
+    els.nextBtn.style.display = 'none';
+    renderCards();
+    syncBoats();
+    updateMeters();
+    setStatus(`New round. ${next.example}`);
+    validateRound();
+  }
+
+  function finishRun(){
+    state.over = true;
+    els.feedbackBox.style.display = 'none';
+    els.checkBtn.disabled = true;
+    els.checkBtn.style.display = 'none';
+    els.nextBtn.style.display = 'none';
+    const rating = state.perfectRounds >= 3 ? 'steady watch' : state.perfectRounds >= 2 ? 'usable watch' : 'noisy watch';
+    els.summaryBox.style.display = 'block';
+    els.summaryBox.innerHTML = `
+      <div class="kicker">Run summary</div>
+      <h2 style="margin-top:8px">${rating}</h2>
+      <p class="subtitle" style="margin-top:10px">You practiced a simple skill: choose what is <strong>now</strong>, what can <strong>wait</strong>, and what is only <strong>noise</strong>. That matters because overload gets worse when every signal feels urgent.</p>
+      <div class="summaryGrid">
+        <div class="feedbackCard"><strong>Score</strong><div class="tiny">${state.score}</div></div>
+        <div class="feedbackCard"><strong>Perfect rounds</strong><div class="tiny">${state.perfectRounds} of ${rounds.length}</div></div>
+        <div class="feedbackCard"><strong>Backlog at end</strong><div class="tiny">${state.backlog}</div></div>
+      </div>
+    `;
+    setStatus('Run complete. Save session notes or restart for another pass.');
+    record('finish', { score: state.score, perfectRounds: state.perfectRounds, calm: state.calm, backlog: state.backlog, trust: state.trust });
+  }
+
+  function exportRun(){
+    const payload = {
+      module: 'Breakwater Watch',
+      creator: 'Ishan Bangroo',
+      score: state.score,
+      perfectRounds: state.perfectRounds,
+      calm: state.calm,
+      backlog: state.backlog,
+      trust: state.trust,
+      sessionEvents: state.telemetry
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'breakwater_watch_session_notes.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function resetRun(){
+    state.round = 0;
+    state.score = 0;
+    state.perfectRounds = 0;
+    state.calm = 66;
+    state.backlog = 18;
+    state.trust = 58;
+    state.logs = [];
+    state.telemetry = [];
+    state.over = false;
+    state.resolved = false;
+    state.choices = Object.fromEntries(rounds[0].signals.map(signal => [signal.id, WAIT]));
+    els.summaryBox.style.display = 'none';
+    els.feedbackBox.style.display = 'none';
+    els.checkBtn.style.display = 'inline-flex';
+    els.nextBtn.style.display = 'none';
+    renderCards();
+    syncBoats();
+    updateMeters();
+    log('Run started. Keep one signal in each lane: Dock now, Wait outside, and Ignore.');
+    setStatus(`Round 1 example: ${rounds[0].example}`);
+    validateRound();
+    record('start', { creator: 'Ishan Bangroo' });
+  }
+
+  window.__ShiftworksTest = {
+    module: 'breakwater_watch',
+    getState: () => ({ round: state.round, score: state.score, perfectRounds: state.perfectRounds, over: state.over, resolved: state.resolved }),
+    setChoice: (signalId, value) => {
+      const allowed = [IGNORE, WAIT, DOCK];
+      if(!allowed.includes(value)) return false;
+      state.choices[signalId] = value;
+      renderCards();
+      syncBoats();
+      validateRound();
+      return true;
+    },
+    resolveRound,
+    nextRound,
+    finishRun,
+    resetRun,
+    autoplayPerfect: () => {
+      resetRun();
+      while(!state.over){
+        const round = currentRound();
+        round.signals.forEach(signal => { state.choices[signal.id] = signal.best; });
+        renderCards();
+        syncBoats();
+        validateRound();
+        resolveRound();
+        if(!state.over) nextRound();
+        else break;
+      }
+    }
+  };
+
+  els.checkBtn.addEventListener('click', resolveRound);
+  els.nextBtn.addEventListener('click', nextRound);
+  els.exportBtn.addEventListener('click', exportRun);
+  els.resetBtn.addEventListener('click', resetRun);
+  resetRun();
+})();
+</script>
+</body>
+</html>
