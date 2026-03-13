@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shiftworks · Created by Ishan Bangroo</title>
+<style>
+  :root{
+    --ink:#171412;
+    --muted:#5e5650;
+    --paper:#f5efe5;
+    --panel:#fffaf4;
+    --line:rgba(29,22,18,.10);
+    --shadow:0 22px 54px rgba(0,0,0,.10);
+    --harbor:#3c6772;
+    --kind:#7a5566;
+    --ward:#5f785f;
+    --ember:#7b4f74;
+    --break:#86644c;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;min-height:100%;
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at top left, rgba(195,154,88,.16), transparent 18%),
+      radial-gradient(circle at top right, rgba(61,102,114,.11), transparent 16%),
+      linear-gradient(180deg,#efe7db,#e7ded2 46%,#ddd6cb 100%);
+  }
+  body{padding:18px}
+  .shell{max-width:1320px;margin:0 auto}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;letter-spacing:.01em}
+  h1{margin:0;font-size:clamp(2.6rem,5.1vw,5rem)}
+  h2{margin:0;font-size:clamp(1.35rem,2vw,2rem)}
+  h3{margin:0 0 8px;font-size:1.55rem}
+  .hero{
+    border-radius:34px;
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.44),rgba(255,255,255,.18)),
+      linear-gradient(145deg,#f7ebda,#ece2d5 52%,#dfd8cf 100%);
+  }
+  .heroGrid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;padding:30px}
+  .kicker{text-transform:uppercase;letter-spacing:.18em;font-size:.76rem;font-weight:800;color:#86663c}
+  .subtitle{margin-top:14px;max-width:860px;line-height:1.72;font-size:1.04rem;color:#3f3833}
+  .credit{margin-top:14px;display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.62);border:1px solid rgba(29,22,18,.08);font-weight:700}
+  .credit small{font-weight:600;color:#665e57}
+  .tagRow{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+  .tag{padding:8px 12px;border-radius:999px;border:1px solid rgba(29,22,18,.1);background:rgba(255,255,255,.52);font-size:.86rem}
+  .panelCol{display:grid;gap:12px}
+  .mini{padding:18px;border-radius:24px;border:1px solid rgba(29,22,18,.1);background:rgba(255,255,255,.58);box-shadow:0 10px 22px rgba(0,0,0,.04)}
+  .mini strong{display:block;margin-bottom:8px}
+  .mini p{margin:0;color:#433a34;line-height:1.56}
+  .section{margin-top:24px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .game{display:flex;flex-direction:column;border-radius:30px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);background:#fff}
+  .top{padding:22px 22px 58px;position:relative;color:#fff;min-height:226px}
+  .top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.22))}
+  .top.harbor{background:linear-gradient(145deg,#334a51,#456f77 54%,#79959d)}
+  .top.kind{background:linear-gradient(145deg,#4a3341,#765061 54%,#c48a65)}
+  .top.ward{background:linear-gradient(145deg,#414d4d,#607b62 54%,#b8a46f)}
+  .top.ember{background:linear-gradient(145deg,#2f2947,#744670 52%,#e09150)}
+  .top.break{background:linear-gradient(145deg,#56453a,#7e5f48 54%,#a18763)}
+  .badge{display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase}
+  .top h3,.top p{position:relative;z-index:1}
+  .top p{line-height:1.55;max-width:420px}
+  .body{padding:18px 20px 20px;background:#fcfaf7;display:flex;flex-direction:column;gap:14px;flex:1}
+  .metricRow{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px}
+  .metric{padding:12px 14px;border-radius:16px;background:#fff;border:1px solid rgba(29,22,18,.08)}
+  .metric span{display:block;font-size:.78rem;color:#655c54}
+  .metric strong{display:block;margin-top:4px}
+  .btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+  a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:14px;padding:12px 15px;font-weight:700;border:1px solid rgba(29,22,18,.1);background:#fff;color:var(--ink)}
+  a.btn.harbor{background:var(--harbor);color:#fff}
+  a.btn.kind{background:var(--kind);color:#fff}
+  a.btn.ward{background:var(--ward);color:#fff}
+  a.btn.ember{background:var(--ember);color:#fff}
+  a.btn.break{background:var(--break);color:#fff}
+  .frame{margin-top:24px;padding:22px;border-radius:28px;border:1px solid rgba(29,22,18,.08);background:linear-gradient(145deg,rgba(61,102,114,.10),rgba(122,85,102,.10),rgba(224,145,80,.08))}
+  .frameGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+  .frameCard{padding:14px 16px;border-radius:18px;background:#fff;border:1px solid rgba(29,22,18,.08)}
+  .tiny{font-size:.86rem;color:var(--muted);line-height:1.58}
+  .footerBar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.46);border:1px solid rgba(29,22,18,.08)}
+  .quickRun{margin-top:18px;padding:14px 16px;border-radius:20px;background:rgba(255,255,255,.54);border:1px solid rgba(29,22,18,.08)}
+  .quickRun strong{display:block;margin-bottom:6px}
+  @media (max-width:960px){.heroGrid{grid-template-columns:1fr;padding:22px}}
+  @media (max-width:640px){body{padding:12px}.metricRow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <section class="hero">
+    <div class="heroGrid">
+      <div>
+        <div class="kicker">Browser platform of short scenario games</div>
+        <h1>Shiftworks</h1>
+        <div class="credit">Created by Ishan Bangroo <small>adult browser games about overload, prioritization, interruption recovery, and cleaner handoffs</small></div>
+        <p class="subtitle">Shiftworks is a series of short browser modules about staying usable under pressure. Across the games, the same practical moves recur in different forms: spot the live signal, protect working room, leave a clean next step, and stop every loud thing from passing as urgent. The tone is adult, grounded, and meant to survive a real phone screen.</p>
+        <div class="tagRow">
+          <span class="tag">Adult audience</span>
+          <span class="tag">Mobile-friendly play</span>
+          <span class="tag">Bounded AI debrief in one module</span>
+          <span class="tag">Short runs</span>
+          <span class="tag">No install needed</span>
+          <span class="tag">Touch and keyboard support</span>
+        </div>
+      </div>
+      <div class="panelCol">
+        <div class="mini"><strong>What the platform is for</strong><p>Practicing overload management in ways that stay readable under stress: signal triage, interruption recovery, return-point notes, capacity-aware help seeking, handoffs, and small reset moves that make the next action workable.</p></div>
+        <div class="mini"><strong>Why the modules change shape</strong><p>One genre never fits everybody. Shiftworks carries the same practical habits across a district map, a communications module, a planning board, a neon courier runner, and a dispatch network so structure changes while the core moves stay recognizable.</p></div>
+        <div class="mini"><strong>How the platform plays</strong><p>Each module stands alone. Taken together, they behave like a platform rather than one-off demos: movement, comms, planning, handoffs, and rapid filtering all get their own form.</p></div>
+      <div class="quickRun"><strong>Best first run</strong><div class="tiny">If you want the easiest phone game first, start with <strong>Breakwater Watch</strong>. You only need to drag 3 sliders: one to <strong>Dock now</strong>, one to <strong>Wait outside</strong>, and one to <strong>Ignore</strong>.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="cards">
+      <article class="game">
+        <div class="top harbor">
+          <span class="badge">Module 1 · Top-down action adventure</span>
+          <h3>Harbor of Drift</h3>
+          <p>Fight through the harbor in a top-down shooter, restore relays, sort urgent from loud, and keep the district from turning every interruption into the only thing that matters.</p>
+        </div>
+        <div class="body">
+          <div class="metricRow">
+            <div class="metric"><span>Main feel</span><strong>Top-down shooter</strong></div>
+            <div class="metric"><span>Core skill</span><strong>Calm action under pressure</strong></div>
+            <div class="metric"><span>Session</span><strong>7 to 10 minutes</strong></div>
+            <div class="metric"><span>Controls</span><strong>Touch + keyboard</strong></div>
+          </div>
+          <div class="btnRow"><a class="btn harbor" href="harbor_of_drift.html">Open module</a></div>
+        </div>
+      </article>
+
+      <article class="game">
+        <div class="top kind">
+          <span class="badge">Module 2 · Narrative communications game</span>
+          <h3>Kindline Switchboard</h3>
+          <p>Pick the line that actually deserves the board, route the exchange with one bounded response card, and leave a backup note strong enough for the next interruption.</p>
+        </div>
+        <div class="body">
+          <div class="metricRow">
+            <div class="metric"><span>Main feel</span><strong>Quiet narrative pressure</strong></div>
+            <div class="metric"><span>Core skill</span><strong>Interruption recovery</strong></div>
+            <div class="metric"><span>Voice</span><strong>Optional Quayline readout</strong></div>
+            <div class="metric"><span>Session</span><strong>5 to 7 minutes</strong></div>
+          </div>
+          <div class="btnRow"><a class="btn kind" href="kindline_switchboard.html">Open module</a></div>
+        </div>
+      </article>
+
+      <article class="game">
+        <div class="top ward">
+          <span class="badge">Module 3 · Planning board</span>
+          <h3>Ward Relay</h3>
+          <p>Sort incoming work into now, next, and noise, make one board action per round, and leave a handoff that the next person can actually use.</p>
+        </div>
+        <div class="body">
+          <div class="metricRow">
+            <div class="metric"><span>Main feel</span><strong>Turn-based sorting</strong></div>
+            <div class="metric"><span>Core skill</span><strong>Task choreography</strong></div>
+            <div class="metric"><span>Handoff quality</span><strong>Visible</strong></div>
+            <div class="metric"><span>Session</span><strong>6 to 8 minutes</strong></div>
+          </div>
+          <div class="btnRow"><a class="btn ward" href="ward_relay.html">Open module</a></div>
+        </div>
+      </article>
+
+      <article class="game">
+        <div class="top ember">
+          <span class="badge">Module 4 · Mobile action runner</span>
+          <h3>Emberline</h3>
+          <p>Run with 3 boxes. Jump crates, slide under low bars, clear pink fake alerts, and use short slow-down moments when the screen gets too busy.</p>
+        </div>
+        <div class="body">
+          <div class="metricRow">
+            <div class="metric"><span>Main feel</span><strong>Side-scrolling courier action</strong></div>
+            <div class="metric"><span>Core skill</span><strong>Focus under pressure</strong></div>
+            <div class="metric"><span>Controls</span><strong>Phone + desktop</strong></div>
+            <div class="metric"><span>Session</span><strong>5 to 8 minutes</strong></div>
+          </div>
+          <div class="btnRow"><a class="btn ember" href="emberline.html">Open module</a></div>
+        </div>
+      </article>
+
+      <article class="game">
+        <div class="top break">
+          <span class="badge">Module 5 · Slider-based harbor watch</span>
+          <h3>Breakwater Watch</h3>
+          <p>Drag 3 sliders each round. Send one signal to <strong>Dock now</strong>, one to <strong>Wait outside</strong>, and one to <strong>Ignore</strong>. Keep the harbor calm by not treating every ping like an emergency.</p>
+        </div>
+        <div class="body">
+          <div class="metricRow">
+            <div class="metric"><span>Main feel</span><strong>Simple slider board</strong></div>
+            <div class="metric"><span>Core skill</span><strong>Urgency filtering</strong></div>
+            <div class="metric"><span>Main move</span><strong>Drag 3 sliders</strong></div>
+            <div class="metric"><span>Session</span><strong>4 to 6 minutes</strong></div>
+          </div>
+          <div class="btnRow"><a class="btn break" href="breakwater_control.html">Open module</a></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="frame">
+    <div class="kicker">Recurring moves across the platform</div>
+    <h2>Different genres, same operational backbone</h2>
+    <div class="frameGrid">
+      <div class="frameCard"><strong>Signal triage</strong><div class="tiny">Not every loud thing deserves motion. Several modules ask what is now, what is next, and what is noise.</div></div>
+      <div class="frameCard"><strong>Return-point notes</strong><div class="tiny">When work cannot finish cleanly, the platform rewards leaving the next step readable instead of hiding it.</div></div>
+      <div class="frameCard"><strong>Short recovery windows</strong><div class="tiny">Small reset moves matter more here than fake heroic overreach.</div></div>
+      <div class="frameCard"><strong>Capacity-aware help seeking</strong><div class="tiny">Backup is framed as operational judgment, not failure.</div></div>
+      <div class="frameCard"><strong>Adult tone</strong><div class="tiny">The platform aims for mature, vivid, playable scenarios rather than child-coded wellness wallpaper.</div></div>
+    </div>
+    <div class="footerBar">
+      <div class="tiny"><strong>Recommended first run:</strong> Breakwater Watch first if you want the clearest phone-friendly game, then Harbor of Drift for action.</div>
+      <div class="tiny"><strong>Deployment:</strong> Static files in <code>public/</code> and the Quayline function in <code>functions/api/</code>.</div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
