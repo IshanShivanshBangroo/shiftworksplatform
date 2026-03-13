@@ -1,0 +1,3307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shiftworks · Harbor of Drift</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #20150f;
+    --paper: rgba(56, 39, 28, 0.94);
+    --paper-2: rgba(43, 30, 22, 0.96);
+    --paper-soft: rgba(79, 58, 43, 0.88);
+    --line: rgba(235, 211, 173, 0.14);
+    --line-strong: rgba(235, 211, 173, 0.28);
+    --text: #f0e7d9;
+    --muted: #d0c0a8;
+    --accent: #c69a5c;
+    --accent-2: #7f988f;
+    --danger: #c86b58;
+    --good: #a5b88e;
+    --shadow: 0 18px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #17100c;
+    color: var(--text);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  body.largeText { font-size: 1.07rem; }
+  #gameCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    background: #1b1410;
+    z-index: 0;
+  }
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(circle at top, rgba(120, 90, 58, 0.18), rgba(14,10,8,0.75) 58%, rgba(10,7,6,0.94) 100%),
+      linear-gradient(180deg, rgba(0,0,0,0.34), rgba(0,0,0,0.56));
+    z-index: 20;
+  }
+  .screen.active { display: flex; }
+  .card {
+    width: min(1040px, calc(100vw - 48px));
+    max-height: min(90vh, 900px);
+    overflow: auto;
+    border-radius: 28px;
+    background:
+      linear-gradient(180deg, rgba(86, 63, 46, 0.97), rgba(53, 37, 28, 0.98)),
+      radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 46%);
+    box-shadow: 0 28px 70px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+    border: 1px solid rgba(255, 227, 185, 0.12);
+    padding: 28px;
+    position: relative;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.04) 0.7px, transparent 0.7px),
+      radial-gradient(rgba(0,0,0,0.06) 0.6px, transparent 0.6px);
+    background-size: 20px 20px, 16px 16px;
+    background-position: 0 0, 8px 9px;
+    opacity: 0.28;
+    mix-blend-mode: soft-light;
+  }
+  h1, h2, h3 {
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: 0.01em;
+  }
+  h1 { margin: 0; font-size: clamp(2.2rem, 4.4vw, 4rem); }
+  h2 { margin: 0; font-size: clamp(1.55rem, 2.2vw, 2.3rem); }
+  h3 { margin: 0 0 8px; font-size: 1.05rem; }
+  p { line-height: 1.55; }
+  .muted { color: var(--muted); }
+  .tiny { font-size: 0.78rem; color: var(--muted); }
+  .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: #e2c18d;
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: clamp(1rem, 1.3vw, 1.1rem);
+    max-width: 760px;
+    margin-top: 12px;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+  .grid3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    align-items: stretch;
+  }
+  .panel {
+    background:
+      linear-gradient(180deg, rgba(42, 28, 20, 0.92), rgba(29, 20, 15, 0.96));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .chip {
+    display: inline-block;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgba(205, 165, 108, 0.12);
+    border: 1px solid rgba(223, 193, 140, 0.18);
+    color: #efd8b6;
+    margin: 0 8px 8px 0;
+    font-size: 0.86rem;
+  }
+  .btnRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+  }
+  button {
+    appearance: none;
+    border: 1px solid rgba(234, 208, 165, 0.18);
+    background:
+      linear-gradient(180deg, rgba(120, 88, 56, 0.97), rgba(83, 58, 37, 0.98));
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
+    font-family: inherit;
+  }
+  button:hover { transform: translateY(-1px); filter: brightness(1.03); border-color: rgba(234, 208, 165, 0.3); }
+  .routeRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+    align-items: center;
+  }
+  .routeBtn {
+    background: rgba(35, 24, 18, 0.94);
+    border-color: rgba(235, 211, 173, 0.16);
+  }
+  .routeBtn.active {
+    border-color: rgba(235, 211, 173, 0.6);
+    box-shadow: 0 0 0 2px rgba(235, 211, 173, 0.18), 0 10px 26px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.06);
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+  .routeNote {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    max-width: 760px;
+  }
+
+  .briefNote { margin-top: 10px; color: var(--muted); font-size: 0.88rem; max-width: 760px; }
+  .planList {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .planBtn.active {
+    border-color: rgba(165,184,142,0.5);
+    box-shadow: 0 0 0 2px rgba(165,184,142,0.18), 0 10px 26px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .triageButtons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .triageButtons button {
+    min-height: 86px;
+  }
+  .triageMeta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .triageCard {
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .studyTag {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(127, 152, 143, 0.12);
+    border: 1px solid rgba(127, 152, 143, 0.18);
+    color: #d7e3de;
+    font-size: 0.84rem;
+    margin: 0 8px 8px 0;
+  }
+  button.secondary {
+    background: linear-gradient(180deg, rgba(74, 66, 58, 0.96), rgba(48, 43, 39, 0.98));
+  }
+  button.warn {
+    background: linear-gradient(180deg, rgba(142, 78, 60, 0.96), rgba(94, 49, 38, 0.98));
+    border-color: rgba(232, 170, 150, 0.24);
+  }
+  button.subtle {
+    background: rgba(35, 24, 18, 0.92);
+  }
+  #hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .hudCard {
+    position: fixed;
+    min-width: 220px;
+    padding: 12px 14px;
+    pointer-events: auto;
+  }
+  #topLeft { top: 16px; left: 16px; }
+  #topRight { top: 16px; right: 16px; width: 240px; }
+  #bottomLeft { left: 16px; bottom: 16px; width: 270px; }
+  #bottomRight { right: 16px; bottom: 16px; width: 270px; }
+  #topCenterControls {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+  }
+  #topCenterControls button {
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 0.92rem;
+  }
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 120px;
+    transform: translateX(-50%);
+    max-width: min(720px, calc(100vw - 40px));
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: rgba(34, 24, 18, 0.92);
+    border: 1px solid rgba(235, 211, 173, 0.16);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    text-align: center;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  .barWrap { margin-top: 8px; }
+  .bar {
+    height: 10px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .bar > div { height: 100%; border-radius: inherit; transition: width 0.12s ease; }
+  .statLine {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 7px 0;
+    align-items: center;
+  }
+  #miniMap {
+    width: 100%;
+    height: 116px;
+    display: block;
+    margin-top: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(235, 211, 173, 0.12);
+    background: rgba(15, 10, 8, 0.7);
+  }
+  .choiceList { display: grid; gap: 12px; margin-top: 18px; }
+  .choiceBtn {
+    width: 100%;
+    text-align: left;
+    padding: 15px 16px;
+    line-height: 1.45;
+  }
+  .choiceBtn small { display: block; margin-top: 5px; color: var(--muted); font-weight: 500; }
+  .split { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  #breathCanvas {
+    width: min(340px, 100%);
+    aspect-ratio: 1 / 1;
+    display: block;
+    margin: 18px auto 10px;
+    border-radius: 24px;
+    background: radial-gradient(circle, rgba(36, 25, 18, 0.98) 0%, rgba(20, 14, 10, 0.98) 74%, rgba(13, 9, 7, 0.98) 100%);
+    border: 1px solid rgba(235, 211, 173, 0.12);
+  }
+  #fullMapCanvas {
+    width: 100%;
+    max-width: 900px;
+    aspect-ratio: 1.45 / 1;
+    display: block;
+    margin: 18px auto 0;
+    border-radius: 20px;
+    border: 1px solid rgba(235, 211, 173, 0.12);
+    background: #201712;
+  }
+  .summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .summaryStat {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(35, 24, 18, 0.9);
+    border: 1px solid rgba(235, 211, 173, 0.12);
+  }
+  .summaryStat strong { display: block; font-size: 1.35rem; margin-top: 4px; }
+  #telemetryPreview {
+    margin-top: 10px;
+    max-height: 220px;
+    overflow: auto;
+    white-space: pre-wrap;
+    font-size: 0.78rem;
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(22, 15, 11, 0.96);
+    border: 1px solid rgba(235, 211, 173, 0.1);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .cornerNote {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+  @media (max-width: 940px) {
+    .hudCard { min-width: 180px; }
+    #topRight, #bottomLeft, #bottomRight { width: 220px; }
+  }
+  @media (max-width: 820px) {
+    #topRight, #bottomRight { right: 10px; }
+    #topLeft, #bottomLeft { left: 10px; }
+    #topRight, #bottomRight, #bottomLeft { width: 200px; }
+    #topCenterControls { top: auto; bottom: 16px; }
+    #toast { bottom: 90px; }
+  }
+
+  .seriesHome {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    text-decoration: none;
+    color: #f2eadf;
+    background: rgba(28,19,14,0.92);
+    border: 1px solid rgba(235,211,173,0.18);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+  }
+  .seriesHome:hover { filter: brightness(1.05); }
+  @media (max-width: 820px) {
+    .seriesHome { top: auto; bottom: 16px; left: 16px; transform: none; }
+  }
+
+  .byline { margin-top: 10px; color: var(--muted); font-size: 0.94rem; }
+  .quickExample { padding: 14px 16px; margin-top: 16px; }
+  .quickExample strong { display:block; margin-bottom:6px; }
+  .titleActions { position: sticky; bottom: -10px; padding-top: 12px; background: linear-gradient(180deg, rgba(86, 63, 46, 0), rgba(53, 37, 28, 0.96) 34%); z-index: 2; }
+  .ledgerItem { padding: 12px; border-radius: 14px; background: rgba(22, 15, 11, 0.96); border: 1px solid rgba(235, 211, 173, 0.1); }
+  .ledgerItem strong { display:block; font-size:0.92rem; }
+  .ledgerItem span { display:block; margin-top:4px; color: var(--muted); font-size:0.82rem; line-height:1.45; }
+  #telemetryPreview { margin-top:10px; display:grid; gap:10px; max-height:none; overflow:visible; white-space:normal; font-size:inherit; padding:0; border-radius:0; background:none; border:none; font-family:inherit; }
+  #touchControls { position: fixed; left: 0; right: 0; bottom: 10px; z-index: 12; display: none; justify-content: space-between; align-items: flex-end; gap: 12px; padding: 0 12px calc(env(safe-area-inset-bottom) + 8px); pointer-events: none; }
+  #touchControls.active { display: flex; }
+  .touchColumn { display:flex; flex-direction:column; gap:8px; pointer-events:auto; }
+  .touchLabel { font-size:0.76rem; color:#e9d7bc; text-transform:uppercase; letter-spacing:0.12em; text-shadow:0 1px 6px rgba(0,0,0,0.4); }
+  .touchPad { position:relative; width:128px; height:128px; border-radius:999px; background: rgba(25, 18, 14, 0.72); border:1px solid rgba(235,211,173,0.16); box-shadow:0 14px 30px rgba(0,0,0,0.26); touch-action:none; }
+  .touchPadRing { position:absolute; inset:18px; border-radius:999px; border:1px solid rgba(235,211,173,0.18); }
+  .touchKnob { position:absolute; left:50%; top:50%; width:48px; height:48px; margin-left:-24px; margin-top:-24px; border-radius:999px; background: linear-gradient(180deg, rgba(215,192,157,0.95), rgba(170,140,99,0.95)); box-shadow:0 8px 16px rgba(0,0,0,0.3); }
+  .touchActions { align-items:flex-end; flex:1; max-width: 210px; }
+  .touchStatus { min-height: 38px; font-size:0.75rem; line-height:1.35; color:#eadfcf; padding:8px 10px; border-radius:14px; background:rgba(27, 19, 15, 0.76); border:1px solid rgba(235,211,173,0.12); box-shadow:0 10px 24px rgba(0,0,0,0.25); }
+  .touchButtons { display:grid; grid-template-columns:repeat(2,minmax(84px,1fr)); gap:10px; width:100%; }
+  .touchBtn { appearance:none; border:none; border-radius:16px; padding:12px 10px; font:inherit; font-weight:800; color:var(--text); background:linear-gradient(180deg, rgba(70, 52, 41, 0.96), rgba(42, 30, 23, 0.98)); border:1px solid rgba(235,211,173,0.18); box-shadow:0 12px 24px rgba(0,0,0,0.28); touch-action:manipulation; }
+  .touchBtn.strong { background: linear-gradient(180deg, rgba(139, 100, 61, 0.98), rgba(96, 66, 39, 0.98)); }
+  .touchBtn.wide { grid-column:1 / -1; }
+  body.touchMode .seriesHome { top: 12px; left: 12px; bottom: auto; transform: none; }
+  body.touchMode #topCenterControls { top: auto; bottom: 174px; left: auto; right: 12px; transform: none; flex-direction: column; }
+  body.touchMode #toast { bottom: 248px; }
+  body.touchMode #bottomRight { display: none; }
+  body.touchMode #bottomLeft { bottom: 180px; width: min(280px, calc(100vw - 24px)); }
+  body.touchMode #topLeft { top: 14px; left: 12px; width: min(220px, calc(100vw - 190px)); }
+  body.touchMode #topRight { top: 14px; right: 12px; width: 154px; }
+  body.touchMode #miniMap { height: 86px; }
+  body.touchMode .screen { padding: 14px; }
+  body.touchMode .card { width: min(96vw, 760px); max-height: 92vh; padding: 18px; border-radius: 22px; }
+  body.touchMode .titleCard .grid2 { grid-template-columns: 1fr; }
+  body.touchMode .titleCard .chip:nth-child(n+7) { display:none; }
+  body.touchMode .titleActions { position: sticky; bottom: -8px; }
+  body.touchMode .cornerNote { position: static; margin-top: 14px; display: block; }
+  body.touchMode .byline { font-size: 0.86rem; }
+  body.touchMode .triageButtons { grid-template-columns: 1fr; }
+  body.touchMode #fullMapCanvas { max-height: 46vh; }
+  @media (max-width: 820px) {
+    .quickExample { margin-top: 14px; }
+  }
+
+</style>
+</head>
+<body>
+<a class="seriesHome" href="index.html">Back to Shiftworks</a>
+<canvas id="gameCanvas"></canvas>
+<div id="hud">
+  <div id="topLeft" class="panel hudCard">
+    <div class="tiny">District</div>
+    <div id="areaName" style="font-size:1.15rem;font-weight:800;margin-top:2px;">Harbor of Drift</div>
+    <div id="objectiveText" class="muted" style="margin-top:8px;">Restore the Tidal Relay.</div>
+  </div>
+  <div id="topRight" class="panel hudCard">
+    <div class="statLine"><span>Score</span><strong id="scoreText">0</strong></div>
+    <div class="statLine"><span>Lumen</span><strong id="lumenText">0</strong></div>
+    <div class="statLine"><span>Restoration</span><strong id="restorationText">0%</strong></div>
+    <canvas id="miniMap" width="220" height="130"></canvas>
+  </div>
+  <div id="bottomLeft" class="panel hudCard">
+    <div class="barWrap"><span class="tiny">Health</span><div class="bar"><div id="healthBar" style="width:100%;background:linear-gradient(90deg,#a5b88e,#d3c08f)"></div></div></div>
+    <div class="barWrap"><span class="tiny">Focus</span><div class="bar"><div id="focusBar" style="width:100%;background:linear-gradient(90deg,#7f988f,#b7cfc4)"></div></div></div>
+    <div class="barWrap"><span class="tiny">Static</span><div class="bar"><div id="staticBar" style="width:0%;background:linear-gradient(90deg,#c69a5c,#c86b58)"></div></div></div>
+    <div id="controlHintText" class="tiny" style="margin-top:10px;line-height:1.45;">WASD move · mouse aim · click fire · Shift dash · F guard · R pulse · E interact · 1 2 3 sort alerts</div>
+  </div>
+  <div id="bottomRight" class="panel hudCard">
+    <div class="statLine"><span>Breath perfects</span><strong id="perfectText">0</strong></div>
+    <div class="statLine"><span>Anchors</span><strong id="anchorText">0 / 3</strong></div>
+    <div class="statLine"><span>Support links</span><strong id="supportText">0</strong></div>
+    <div class="statLine"><span>Contracts</span><strong id="contractText">0 / 4</strong></div>
+    <div class="statLine"><span>Pressure band</span><strong id="bandText">steady</strong></div>
+    <div class="tiny" style="margin-top:10px;line-height:1.45;">
+      Guard <span id="guardCdText">ready</span> · Pulse <span id="pulseCdText">ready</span> · Dash <span id="dashCdText">ready</span> · Triage <span id="triageCdText">pending</span>
+    </div>
+  </div>
+  <div id="topCenterControls">
+    <button id="mapButton" class="subtle">Map</button>
+    <button id="pauseButton" class="subtle">Pause</button>
+  </div>
+  <div id="toast"></div>
+</div>
+
+<div id="touchControls" aria-hidden="true">
+  <div class="touchColumn">
+    <div class="touchLabel">Move</div>
+    <div id="touchPad" class="touchPad">
+      <div class="touchPadRing"></div>
+      <div id="touchKnob" class="touchKnob"></div>
+    </div>
+  </div>
+  <div class="touchColumn touchActions">
+    <div id="touchStatus" class="touchStatus">Fire auto-aims · Guard ready · Pulse ready · Dash ready</div>
+    <div class="touchButtons">
+      <button id="touchFireBtn" class="touchBtn strong">Fire</button>
+      <button id="touchGuardBtn" class="touchBtn">Guard</button>
+      <button id="touchPulseBtn" class="touchBtn">Pulse</button>
+      <button id="touchDashBtn" class="touchBtn">Dash</button>
+      <button id="touchUseBtn" class="touchBtn wide">Use / Interact</button>
+    </div>
+  </div>
+</div>
+
+<div id="titleScreen" class="screen active">
+  <div class="card titleCard">
+    <div class="grid2">
+      <div>
+        <div class="kicker">Shiftworks · Game 1</div>
+        <h1>Harbor of Drift</h1>
+        <div class="byline">Created by <strong>Ishan Bangroo</strong></div>
+        <p class="subtitle">A top-down action-adventure about recovering calm prioritization under pressure. It is built around a healthcare-relevant problem: when stress rises, everything starts cosplaying as urgent. The harbor is the metaphor. The target is steadier decision-making, better self-regulation, and less fake urgency.</p>
+        <div style="margin-top:18px;">
+          <span class="chip">Overhead map</span>
+          <span class="chip">Fog of war</span>
+          <span class="chip">4 contracts</span>
+          <span class="chip">Signal triage</span>
+          <span class="chip">Microbreak nooks</span>
+          <span class="chip">Structured debriefs</span>
+          <span class="chip">Support beacons</span>
+          <span class="chip">Adaptive pressure band</span>
+          <span class="chip">Local telemetry</span>
+        </div>
+        <div class="routeRow">
+          <span class="studyTag">Choose a route style</span>
+          <button class="routeBtn active" data-route="standard">Standard route</button>
+          <button class="routeBtn" data-route="steady">Steady route</button>
+          <button class="routeBtn" data-route="storm">Storm route</button>
+        </div>
+        <div id="routeStyleText" class="routeNote">Standard route keeps the district balanced. Steady route widens the guard window and eases pressure. Storm route is harder and scores a little higher.</div>
+        <div class="panel quickExample">
+          <strong>Worked example</strong>
+          <div class="tiny">First minute: move north-west into <em>Tide Office</em>, hold <strong>Fire</strong> to clear the yard, tap <strong>Guard</strong> if an orange shot is about to land, then press <strong>Use</strong> at the relay and hit four steady exhale taps.</div>
+        </div>
+        <div class="btnRow titleActions">
+          <button id="startBtn">Start run</button>
+          <button id="howBtn" class="secondary">How it works</button>
+          <button id="researchBtn" class="secondary">District notes</button>
+        </div>
+        <p class="tiny" style="margin-top:18px; max-width:720px;">Harbor of Drift is the first district in the Shiftworks platform. The port once coordinated tides, freight, and public timing. Then the Static learned to mimic urgency and jam every signal into a false emergency. Your job is to restore four contracts, reopen the beacon, and carry one small bridge-back plan into the real day after the run.</p>
+      </div>
+      <div class="panel" style="padding:16px 18px;">
+        <h3>First route through the district</h3>
+        <p class="muted"><strong>1.</strong> Move into the Tide Office and clear the yard. <strong>2.</strong> Restore the Tidal Relay with four clean exhale taps. <strong>3.</strong> Use Grounding Pulse to find three anchors in the container yard. <strong>4.</strong> Sort the Dispatch Board into <em>Urgent</em>, <em>Soon</em>, and <em>Noise</em>. <strong>5.</strong> Repair the ledger with balanced readings, then take the tower and break the Warden of Rush.</p>
+        <div style="height:10px"></div>
+        <h3>Controls</h3>
+        <p id="titleControlText" class="muted">Desktop: WASD move, mouse aim, left click fire, Shift dash, F guard, R pulse, E use. In triage, press 1 for Urgent, 2 for Soon, or 3 for Noise. Tab opens the map and Esc pauses.</p>
+        <div style="height:10px"></div>
+        <h3>Shift briefing</h3>
+        <p class="muted">Choose a starting load, a support tone, and a practice emphasis. This is light personalization plus a one-item baseline check, not algorithmic mind reading.</p>
+        <div class="tiny" style="margin-top:8px;">Current load</div>
+        <div class="routeRow" id="loadBandRow">
+          <button class="routeBtn active briefingBtn" data-load="medium">Medium</button>
+          <button class="routeBtn briefingBtn" data-load="low">Low</button>
+          <button class="routeBtn briefingBtn" data-load="high">High</button>
+        </div>
+        <div class="tiny" style="margin-top:10px;">Support channel</div>
+        <div class="routeRow" id="supportStyleRow">
+          <button class="routeBtn active briefingBtn" data-support="warm">Warm</button>
+          <button class="routeBtn briefingBtn" data-support="direct">Direct</button>
+          <button class="routeBtn briefingBtn" data-support="quiet">Quiet</button>
+        </div>
+        <div class="tiny" style="margin-top:10px;">Practice focus</div>
+        <div class="routeRow" id="goalFocusRow">
+          <button class="routeBtn briefingBtn" data-goal="settle">Settle</button>
+          <button class="routeBtn active briefingBtn" data-goal="sort">Sort</button>
+          <button class="routeBtn briefingBtn" data-goal="recover">Recover</button>
+        </div>
+        <div id="briefingNote" class="briefNote">Medium load starts balanced. Warm support gives fuller crew-radio prompts. Sort focus gives you more help on prioritization tasks.</div>
+        <div style="height:10px"></div>
+        <h3>How the harbor teaches</h3>
+        <p class="muted">The district rewards the next workable move. Loud signals are not automatically urgent, help is not framed as failure, and short recovery beats are built into the same loop as movement, triage, and boss pressure.</p>
+      </div>
+    </div>
+    <div class="cornerNote">Desktop and mobile. Single-file district with touch support and no extra installs.</div>
+  </div>
+</div>
+
+<div id="howScreen" class="screen">
+  <div class="card">
+    <div class="split">
+      <div>
+        <div class="kicker">How to play</div>
+        <h2>Five mechanics, one harbor district</h2>
+      </div>
+      <button class="secondary closeBtn" data-close="howScreen">Close</button>
+    </div>
+    <div class="grid3" style="margin-top:18px;">
+      <div class="panel" style="padding:16px;"><h3>Breath Guard</h3><p class="muted">Press F for a short guard window. Time it well and you absorb the hit cleanly, lower Static, and stun nearby enemies. Bad timing still reduces damage, just less elegantly.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Grounding Pulse</h3><p class="muted">Press R to reveal hidden anchors, clear fog of war, slow enemies, and light up nearby routes. It also helps you find supply caches instead of running in circles.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Signal Triage</h3><p class="muted">At the Dispatch Board, sort alerts into Urgent, Soon, or Noise. The point is not to be “positive.” The point is to stop obeying every loud thing at once.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Reframe Break</h3><p class="muted">Shielded systems present three possible readings of the situation. Pick the balanced one to break the distortion. Panic is wrong. Fake positivity is wrong. Useful clarity wins.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Microbreak nooks</h3><p class="muted">Find harbor benches and tea nooks. Interacting with them gives a short recovery burst, lowers Static, and rewards not playing the whole run like a clenched jaw with shoes.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Bridge-back plan</h3><p class="muted">At the end, choose one tiny if-then plan to carry outside the game. That makes the slice more than a pretty toy and less than a fake cure. Exactly as it should be.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Map and routes</h3><p class="muted">The district has a readable layout. The map shows water, bridges, contracts, and the tower gate. Fog of war makes exploration matter, but Grounding Pulse cuts through it quickly.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Route styles</h3><p class="muted">Standard route is the baseline. Steady route slows the pressure and helps recovery. Storm route raises challenge and score potential. This is light personalization, not algorithmic sorcery.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Failure state</h3><p class="muted">If Health drops to zero, the run ends and you still get the telemetry summary, route choice, triage performance, support use, and bridge-back plan. Short runs should restart quickly.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Crew radio beacons</h3><p class="muted">Optional support posts act like tiny mentor check-ins. Use them for a short recovery burst, a support-style message, and a temporary buffer against overload.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Contract debriefs</h3><p class="muted">After each major contract you get a short handoff note. Pick one carry-forward tactic and it becomes a small mechanical buff. That keeps reflection inside the game loop.</p></div>
+      <div class="panel" style="padding:16px;"><h3>Adaptive pressure band</h3><p class="muted">The harbor tracks whether you are clear, steady, loaded, or strained. The band changes how quickly Focus returns and how fast Static drains, instead of pretending every player needs the same pressure all the time.</p></div>
+    </div>
+  </div>
+</div>
+
+<div id="researchScreen" class="screen">
+  <div class="card">
+    <div class="split">
+      <div>
+        <div class="kicker">District notes</div>
+        <h2>Harbormaster notes</h2>
+      </div>
+      <button class="secondary closeBtn" data-close="researchScreen">Close</button>
+    </div>
+    <div class="grid2" style="margin-top:18px;">
+      <div class="panel" style="padding:16px;">
+        <h3>How the harbor got jammed</h3>
+        <p class="muted">The harbor once turned tides, freight timing, and public signal into a steady civic rhythm. Then the Static learned to mimic urgency. Since then, every loud thing has tried to dress up as the only thing that matters.</p>
+        <div style="height:10px"></div>
+        <h3>What restores the district</h3>
+        <p class="muted">Breathe before the hit lands. Sort signal before you sprint. Use the radio when your lane is genuinely overloaded. Leave one note the next shift can trust.</p>
+      </div>
+      <div class="panel" style="padding:16px;">
+        <h3>Tools in your kit</h3>
+        <p class="muted">Breath Guard buys you a clean defensive beat. Grounding Pulse reveals anchors and routes. The Dispatch Board keeps the lane honest. Reframe Break cuts through distorted readings. Crew radio beacons and short debriefs let you carry one stable move into the next contract.</p>
+        <div style="height:10px"></div>
+        <h3>Short route advice</h3>
+        <p class="muted">West first, then east. Clear the relay, reveal the yard, sort the board, repair the ledger, then take the tower. If Static spikes, use a bench or radio post before it turns the whole district into fake emergency theatre.</p>
+      </div>
+    </div>
+    <p class="tiny" style="margin-top:16px;">Short runs work fine here. A good harbor run leaves you with one cleaner route and one usable next step.</p>
+  </div>
+</div>
+
+<div id="pauseScreen" class="screen">
+  <div class="card" style="max-width:680px;">
+    <div class="kicker">Paused</div>
+    <h2>Harbor of Drift</h2>
+    <p class="muted">The harbor is patient. Resume when ready.</p>
+    <div class="btnRow">
+      <button id="resumeBtn">Resume</button>
+      <button id="restartBtn" class="secondary">Restart run</button>
+      <button id="pauseMapBtn" class="secondary">Open map</button>
+      <button id="backToTitleBtn" class="warn">Back to title</button>
+    </div>
+  </div>
+</div>
+
+<div id="mapScreen" class="screen">
+  <div class="card">
+    <div class="split">
+      <div>
+        <div class="kicker">District map</div>
+        <h2>Harbor of Drift</h2>
+      </div>
+      <button class="secondary closeBtn" data-close="mapScreen">Close</button>
+    </div>
+    <canvas id="fullMapCanvas" width="920" height="640"></canvas>
+    <div class="grid3" style="margin-top:18px;">
+      <div class="panel" style="padding:14px;"><h3>Tide Office</h3><p class="muted">Clear the west yard and restore the Tidal Relay.</p></div>
+      <div class="panel" style="padding:14px;"><h3>Container Yard</h3><p class="muted">Use Grounding Pulse to reveal and recover three harbor anchors.</p></div>
+      <div class="panel" style="padding:14px;"><h3>Dispatch House</h3><p class="muted">Sort alerts into Urgent, Soon, and Noise at the Dispatch Board.</p></div>
+      <div class="panel" style="padding:14px;"><h3>Ledger House</h3><p class="muted">Repair the ledger relay by breaking distorted readings.</p></div>
+      <div class="panel" style="padding:14px;"><h3>Beacon Tower</h3><p class="muted">Defeat the Warden of Rush after the four contracts are complete.</p></div>
+    </div>
+  </div>
+</div>
+
+<div id="breathScreen" class="screen">
+  <div class="card" style="max-width:780px; text-align:center;">
+    <div class="kicker">Tidal relay</div>
+    <h2>Calibrate the harbor breath cycle</h2>
+    <p class="subtitle" style="margin:10px auto 0; max-width:640px;">Tap Space or click when the marker passes through the pale gold arc. Four clean taps restores the relay.</p>
+    <canvas id="breathCanvas" width="380" height="380"></canvas>
+    <div class="grid2" style="margin-top:12px; grid-template-columns: repeat(auto-fit, minmax(160px, 220px)); justify-content:center;">
+      <div class="panel" style="padding:14px;"><div class="tiny">Steady taps</div><div id="breathCount" style="font-size:2rem; font-weight:800; margin-top:4px;">0 / 4</div></div>
+      <div class="panel" style="padding:14px;"><div class="tiny">Time left</div><div id="breathTime" style="font-size:2rem; font-weight:800; margin-top:4px;">8.0s</div></div>
+    </div>
+    <div class="btnRow" style="justify-content:center;">
+      <button id="breathTapBtn">Tap exhale</button>
+      <button id="breathCancelBtn" class="secondary">Leave challenge</button>
+    </div>
+  </div>
+</div>
+
+<div id="triageScreen" class="screen">
+  <div class="card" style="max-width:940px;">
+    <div class="split">
+      <div>
+        <div class="kicker">Dispatch board</div>
+        <h2>Sort the harbor signals</h2>
+      </div>
+      <button id="triageCancelBtn" class="secondary">Leave board</button>
+    </div>
+    <p class="subtitle">Sort each alert into <strong>Urgent</strong>, <strong>Soon</strong>, or <strong>Noise</strong>. You are training calm prioritization, not trying to be a cheerful liar.</p>
+    <div class="triageMeta">
+      <div class="panel" style="padding:14px;"><div class="tiny">Handled</div><div id="triageCount" style="font-size:2rem; font-weight:800; margin-top:4px;">0 / 6</div></div>
+      <div class="panel" style="padding:14px;"><div class="tiny">Correct</div><div id="triageCorrect" style="font-size:2rem; font-weight:800; margin-top:4px;">0</div></div>
+      <div class="panel" style="padding:14px;"><div class="tiny">Time left</div><div id="triageTime" style="font-size:2rem; font-weight:800; margin-top:4px;">32.0s</div></div>
+    </div>
+    <div class="panel triageCard">
+      <div class="tiny">Incoming alert</div>
+      <h3 id="triageAlertTitle" style="margin-top:6px;">Signal title</h3>
+      <p id="triageAlertBody" class="muted" style="margin-top:10px;">Signal body</p>
+    </div>
+    <div class="triageButtons">
+      <button id="triageUrgentBtn" class="choiceBtn"><strong>1 · Urgent</strong><small>Act now. Delay is costly.</small></button>
+      <button id="triageSoonBtn" class="choiceBtn"><strong>2 · Soon</strong><small>Important, but not this second.</small></button>
+      <button id="triageNoiseBtn" class="choiceBtn"><strong>3 · Noise</strong><small>Loud, duplicated, or low value.</small></button>
+    </div>
+    <p class="tiny" style="margin-top:14px;">The board rewards sorting, not obeying everything at once.</p>
+  </div>
+</div>
+
+<div id="reframeScreen" class="screen">
+  <div class="card" style="max-width:860px;">
+    <div class="kicker">Reframe break</div>
+    <h2 id="reframeTitle">Break the distortion</h2>
+    <p id="reframePrompt" class="subtitle">Prompt</p>
+    <div id="reframeChoices" class="choiceList"></div>
+    <p class="tiny" style="margin-top:14px;">Pick the response that is honest, useful, and balanced.</p>
+  </div>
+</div>
+
+<div id="upgradeScreen" class="screen">
+  <div class="card">
+    <div class="kicker">Workshop relay</div>
+    <h2>Choose one field upgrade</h2>
+    <p class="subtitle">A short slice still needs player expression. Pick the tool that fits your style.</p>
+    <div id="upgradeChoices" class="grid3" style="margin-top:18px;"></div>
+  </div>
+</div>
+
+
+<div id="debriefScreen" class="screen">
+  <div class="card" style="max-width:860px;">
+    <div class="split">
+      <div>
+        <div class="kicker">Contract debrief</div>
+        <h2 id="debriefTitle">Handoff note</h2>
+      </div>
+      <button id="debriefSkipBtn" class="secondary">Skip note</button>
+    </div>
+    <p id="debriefPrompt" class="subtitle">Pick one carry-forward tactic for the next block.</p>
+    <div class="panel" style="padding:14px; margin-top:16px;">
+      <div class="tiny">Why this note exists</div>
+      <div id="debriefSkillText" class="muted" style="margin-top:6px; line-height:1.5;">Short debriefs help lock in what worked before the next pressure spike.</div>
+    </div>
+    <div id="debriefChoices" class="choiceList"></div>
+    <p class="tiny" style="margin-top:14px;">The note is brief on purpose: reflect, choose, move.</p>
+  </div>
+</div>
+
+<div id="summaryScreen" class="screen">
+  <div class="card">
+    <div class="split">
+      <div>
+        <div class="kicker">Run summary</div>
+        <h2 id="summaryTitle">The harbor remembers</h2>
+      </div>
+      <div class="panel" style="padding:12px 16px; min-width:130px; text-align:center;">
+        <div class="tiny">Rank</div>
+        <div id="rankText" style="font-size:2.2rem; font-weight:900; margin-top:4px;">A</div>
+      </div>
+    </div>
+    <div id="summaryStats" class="summaryGrid"></div>
+    <div class="grid2" style="margin-top:18px;">
+      <div class="panel" style="padding:16px;">
+        <h3>Run ledger</h3>
+        <div id="telemetryPreview"></div>
+      </div>
+      <div class="panel" style="padding:16px;">
+        <h3>Bridge-back plan</h3>
+        <p class="muted">Choose one tiny if-then plan to carry into the day. It saves only in this browser.</p>
+        <div id="planChoices" class="planList"></div>
+        <div id="planSaved" class="tiny" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:18px;">
+      <div class="panel" style="padding:16px;">
+        <h3>What Harbor of Drift is</h3>
+        <p class="muted">It is the first district in the project world: a harbor that once turned schedules, tides, and public timing into steady civic signal. The Static corrupted that network by imitating urgency. This district turns breathing, grounding, triage, support, debriefing, and reappraisal into mastery tools instead of stapling them on as a lecture.</p>
+      </div>
+      <div class="panel" style="padding:16px;">
+        <h3>Carry-forward idea</h3>
+        <p class="muted">The harbor gets easier when you stop treating every interruption as the center of the world. Sort first, breathe before the hit lands, and leave one note the next version of you can trust.</p>
+      </div>
+    </div>
+    <div class="btnRow">
+      <button id="playAgainBtn">Play again</button>
+      <button id="downloadTelemetryBtn" class="secondary">Save session notes</button>
+      <button id="titleFromSummaryBtn" class="secondary">Back to title</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const perf = { mobile: false, particleCap: 180, waveLines: 12, miniMapEvery: 2 };
+  const touch = { active: false, fire: false, x: 0, y: 0, id: null };
+  let frameCounter = 0;
+  function applyPerfProfile() {
+    perf.mobile = window.matchMedia('(max-width: 820px)').matches || ((navigator.maxTouchPoints || 0) > 0);
+    perf.particleCap = perf.mobile ? 96 : 220;
+    perf.waveLines = perf.mobile ? 6 : 12;
+    perf.miniMapEvery = perf.mobile ? 6 : 2;
+    document.body.classList.toggle('touchMode', perf.mobile);
+    const hint = document.getElementById('controlHintText');
+    if (hint) hint.textContent = perf.mobile ? 'Touch: left thumb move · Fire auto-aims · Guard · Pulse · Dash · Use · Map · Pause' : 'WASD move · mouse aim · click fire · Shift dash · F guard · R pulse · E interact · 1 2 3 sort alerts';
+    const titleHint = document.getElementById('titleControlText');
+    if (titleHint) titleHint.textContent = perf.mobile ? 'Touch: move with the left pad. Fire auto-aims the nearest threat. Guard, Pulse, Dash, and Use sit on the right. Triage and relay screens use big buttons.' : 'Desktop: WASD move, mouse aim, left click fire, Shift dash, F guard, R pulse, E use. In triage, press 1 for Urgent, 2 for Soon, or 3 for Noise. Tab opens the map and Esc pauses.';
+    syncTouchHudVisibility();
+  }
+  const miniMapCanvas = document.getElementById('miniMap');
+  const miniMapCtx = miniMapCanvas.getContext('2d');
+  const fullMapCanvas = document.getElementById('fullMapCanvas');
+  const fullMapCtx = fullMapCanvas.getContext('2d');
+  const breathCanvas = document.getElementById('breathCanvas');
+  const breathCtx = breathCanvas.getContext('2d');
+
+  const screens = {
+    title: document.getElementById('titleScreen'),
+    how: document.getElementById('howScreen'),
+    research: document.getElementById('researchScreen'),
+    pause: document.getElementById('pauseScreen'),
+    map: document.getElementById('mapScreen'),
+    breath: document.getElementById('breathScreen'),
+    triage: document.getElementById('triageScreen'),
+    reframe: document.getElementById('reframeScreen'),
+    upgrade: document.getElementById('upgradeScreen'),
+    debrief: document.getElementById('debriefScreen'),
+    summary: document.getElementById('summaryScreen')
+  };
+
+  const refs = {
+    areaName: document.getElementById('areaName'),
+    objectiveText: document.getElementById('objectiveText'),
+    scoreText: document.getElementById('scoreText'),
+    lumenText: document.getElementById('lumenText'),
+    restorationText: document.getElementById('restorationText'),
+    healthBar: document.getElementById('healthBar'),
+    focusBar: document.getElementById('focusBar'),
+    staticBar: document.getElementById('staticBar'),
+    perfectText: document.getElementById('perfectText'),
+    anchorText: document.getElementById('anchorText'),
+    supportText: document.getElementById('supportText'),
+    bandText: document.getElementById('bandText'),
+    contractText: document.getElementById('contractText'),
+    guardCdText: document.getElementById('guardCdText'),
+    pulseCdText: document.getElementById('pulseCdText'),
+    dashCdText: document.getElementById('dashCdText'),
+    triageCdText: document.getElementById('triageCdText'),
+    toast: document.getElementById('toast'),
+    reframeTitle: document.getElementById('reframeTitle'),
+    reframePrompt: document.getElementById('reframePrompt'),
+    reframeChoices: document.getElementById('reframeChoices'),
+    upgradeChoices: document.getElementById('upgradeChoices'),
+    debriefTitle: document.getElementById('debriefTitle'),
+    debriefPrompt: document.getElementById('debriefPrompt'),
+    debriefSkillText: document.getElementById('debriefSkillText'),
+    debriefChoices: document.getElementById('debriefChoices'),
+    breathCount: document.getElementById('breathCount'),
+    breathTime: document.getElementById('breathTime'),
+    triageCount: document.getElementById('triageCount'),
+    triageCorrect: document.getElementById('triageCorrect'),
+    triageTime: document.getElementById('triageTime'),
+    triageAlertTitle: document.getElementById('triageAlertTitle'),
+    triageAlertBody: document.getElementById('triageAlertBody'),
+    summaryTitle: document.getElementById('summaryTitle'),
+    rankText: document.getElementById('rankText'),
+    summaryStats: document.getElementById('summaryStats'),
+    telemetryPreview: document.getElementById('telemetryPreview'),
+    planChoices: document.getElementById('planChoices'),
+    planSaved: document.getElementById('planSaved')
+  };
+
+  const touchRefs = {
+    root: document.getElementById('touchControls'),
+    pad: document.getElementById('touchPad'),
+    knob: document.getElementById('touchKnob'),
+    status: document.getElementById('touchStatus'),
+    fire: document.getElementById('touchFireBtn'),
+    guard: document.getElementById('touchGuardBtn'),
+    pulse: document.getElementById('touchPulseBtn'),
+    dash: document.getElementById('touchDashBtn'),
+    use: document.getElementById('touchUseBtn')
+  };
+
+  const input = {
+    keys: Object.create(null),
+    pressed: Object.create(null),
+    mouse: { x: 0, y: 0, worldX: 0, worldY: 0, left: false, leftPressed: false, right: false, rightPressed: false, moved: false },
+    clearFrame() {
+      this.pressed = Object.create(null);
+      this.mouse.leftPressed = false;
+      this.mouse.rightPressed = false;
+    }
+  };
+
+  let view = { w: window.innerWidth, h: window.innerHeight, dpr: 1 };
+  let lastTime = 0;
+  let toastTimer = 0;
+  let game = null;
+  applyPerfProfile();
+
+  const WORLD = { w: 2600, h: 1800, cell: 80, cols: 33, rows: 23 };
+
+  let patterns = null;
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function distXY(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
+  function rand(seed) { const x = Math.sin(seed * 127.1) * 43758.5453123; return x - Math.floor(x); }
+  function shade(hex, amt) {
+    const n = hex.replace('#', '');
+    const num = parseInt(n, 16);
+    let r = (num >> 16) & 255;
+    let g = (num >> 8) & 255;
+    let b = num & 255;
+    r = clamp(Math.round(r + 255 * amt), 0, 255);
+    g = clamp(Math.round(g + 255 * amt), 0, 255);
+    b = clamp(Math.round(b + 255 * amt), 0, 255);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+  function drawRoundRect(g, x, y, w, h, r, fill, stroke) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    if (fill) g.fill();
+    if (stroke) g.stroke();
+  }
+  function circleRectCollision(cx, cy, r, rect) {
+    const nx = clamp(cx, rect.x, rect.x + rect.w);
+    const ny = clamp(cy, rect.y, rect.y + rect.h);
+    const dx = cx - nx;
+    const dy = cy - ny;
+    return dx * dx + dy * dy < r * r;
+  }
+  function pointInRect(px, py, rect) {
+    return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
+  }
+  function nowSeconds() { return performance.now() / 1000; }
+
+  function resize() {
+    view.w = window.innerWidth;
+    view.h = window.innerHeight;
+    applyPerfProfile();
+    view.dpr = perf.mobile ? Math.max(1, Math.min(1.15, window.devicePixelRatio || 1)) : Math.max(1, Math.min(1.5, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(view.w * view.dpr);
+    canvas.height = Math.floor(view.h * view.dpr);
+    canvas.style.width = view.w + 'px';
+    canvas.style.height = view.h + 'px';
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    ctx.imageSmoothingEnabled = !perf.mobile;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function makePatternCanvas(w, h, drawFn) {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const g = c.getContext('2d');
+    drawFn(g, w, h);
+    return c;
+  }
+
+  function buildPatterns() {
+    const ground = makePatternCanvas(160, 160, (g, w, h) => {
+      g.fillStyle = '#5f4a39';
+      g.fillRect(0, 0, w, h);
+      for (let i = 0; i < (perf.mobile ? 120 : 220); i++) {
+        const x = rand(i * 11 + 3) * w;
+        const y = rand(i * 17 + 7) * h;
+        const r = 0.5 + rand(i * 19 + 2) * 1.6;
+        g.fillStyle = i % 2 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.05)';
+        g.beginPath();
+        g.arc(x, y, r, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.strokeStyle = 'rgba(0,0,0,0.04)';
+      for (let x = 0; x < w; x += (perf.mobile ? 28 : 20)) {
+        g.beginPath();
+        g.moveTo(x, 0);
+        g.lineTo(x, h);
+        g.stroke();
+      }
+      for (let y = 0; y < h; y += (perf.mobile ? 28 : 20)) {
+        g.beginPath();
+        g.moveTo(0, y);
+        g.lineTo(w, y);
+        g.stroke();
+      }
+    });
+    const dock = makePatternCanvas(180, 80, (g, w, h) => {
+      g.fillStyle = '#7e6044';
+      g.fillRect(0, 0, w, h);
+      for (let y = 0; y <= h; y += 16) {
+        g.fillStyle = y % 32 === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+        g.fillRect(0, y, w, 2);
+      }
+      g.strokeStyle = 'rgba(36,26,19,0.16)';
+      for (let x = 0; x < w; x += 30) {
+        g.beginPath();
+        g.moveTo(x, 0);
+        g.lineTo(x, h);
+        g.stroke();
+      }
+    });
+    const yard = makePatternCanvas(120, 120, (g, w, h) => {
+      g.fillStyle = '#667066';
+      g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(255,255,255,0.04)';
+      for (let x = 0; x <= w; x += 24) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+      for (let y = 0; y <= h; y += 24) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      for (let i = 0; i < (perf.mobile ? 20 : 40); i++) {
+        const x = rand(i * 13 + 4) * w;
+        const y = rand(i * 21 + 7) * h;
+        g.fillStyle = 'rgba(0,0,0,0.08)';
+        g.fillRect(x, y, 2, 2);
+      }
+    });
+    const market = makePatternCanvas(120, 120, (g, w, h) => {
+      g.fillStyle = '#726454';
+      g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(255,255,255,0.04)';
+      for (let y = 0; y <= h; y += 18) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      g.strokeStyle = 'rgba(0,0,0,0.05)';
+      for (let x = 0; x <= w; x += 18) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+    });
+    patterns = {
+      ground: ctx.createPattern(ground, 'repeat'),
+      dock: ctx.createPattern(dock, 'repeat'),
+      yard: ctx.createPattern(yard, 'repeat'),
+      market: ctx.createPattern(market, 'repeat')
+    };
+  }
+  buildPatterns();
+
+  const areaDefs = [
+    { name: 'Tide Office', rect: { x: 0, y: 0, w: 980, h: 980 } },
+    { name: 'South Quay', rect: { x: 0, y: 980, w: 980, h: 820 } },
+    { name: 'Container Yard', rect: { x: 740, y: 360, w: 850, h: 760 } },
+    { name: 'Dispatch House', rect: { x: 1460, y: 920, w: 260, h: 260 } },
+    { name: 'Ledger House', rect: { x: 1720, y: 920, w: 420, h: 420 } },
+    { name: 'Beacon Tower', rect: { x: 1810, y: 70, w: 690, h: 620 } },
+    { name: 'East Docks', rect: { x: 1380, y: 0, w: 1220, h: 900 } }
+  ];
+
+  const REFRAME_SETS = {
+    ledger1: {
+      title: 'Repair the harbor ledger',
+      prompt: 'Traffic backed up this morning. Which reading helps you act without turning one delay into the end of civilization?',
+      correct: 1,
+      choices: [
+        { text: 'Everything is failing. The whole day is ruined already.', note: 'Catastrophic. Big feelings, bad model.' },
+        { text: 'This is one delay. I can sort the next step, update the route, and keep the rest of the day separate.', note: 'Balanced and useful.' },
+        { text: 'Nothing is wrong at all. I should ignore it and pretend the backlog is imaginary.', note: 'Comforting nonsense is still nonsense.' }
+      ]
+    },
+    ledger2: {
+      title: 'Repair the harbor ledger',
+      prompt: 'A supervisor sounded sharp on the radio. Which interpretation keeps signal and noise apart?',
+      correct: 2,
+      choices: [
+        { text: 'They hate my work. This proves I am the problem.', note: 'Mind reading with bonus self-attack.' },
+        { text: 'They are probably just a bad person and none of this matters.', note: 'Dismissive, but not useful.' },
+        { text: 'The tone was rough. I can ask for the specific instruction and not invent the rest of the story.', note: 'Specific and grounded.' }
+      ]
+    },
+    boss1: {
+      title: 'Break the Warden shield',
+      prompt: 'The tower screams that every signal must be answered immediately. Which response cuts through the fake emergency?',
+      correct: 0,
+      choices: [
+        { text: 'Some signals are urgent. Many are just loud. I can sort them instead of obeying all of them.', note: 'Correct.' },
+        { text: 'Everything can wait forever. Nothing matters enough to prioritize.', note: 'Swinging to apathy is not clarity.' },
+        { text: 'I have to answer every alert at once or I am failing.', note: 'That is the distortion speaking.' }
+      ]
+    },
+    boss2: {
+      title: 'Break the Warden shield',
+      prompt: 'The harbor is noisy again. Which reading makes room for action without panic theatre?',
+      correct: 2,
+      choices: [
+        { text: 'It is all out of control. Any mistake now will collapse the whole district.', note: 'That is the drama engine.' },
+        { text: 'No need to think. I will just mash through and hope it sorts itself out.', note: 'Hope is not a strategy.' },
+        { text: 'The pressure spike is real, but it is local and temporary. Deal with the next target, then reassess.', note: 'Correct.' }
+      ]
+    }
+  };
+
+  const UPGRADE_OPTIONS = [
+    { key: 'steadyHands', title: 'Steady Hands', text: 'Signal shots fire faster and hit a little harder.', apply: (g) => { g.player.fireRate = 0.17; g.player.damage = 2; } },
+    { key: 'lanternCore', title: 'Lantern Core', text: 'Grounding Pulse recharges faster and reveals a wider radius.', apply: (g) => { g.player.pulseCooldownBase = 5.5; g.player.pulseRadius = 420; } },
+    { key: 'softBoots', title: 'Harbor Boots', text: 'Dash recharges faster and gives a longer burst.', apply: (g) => { g.player.dashCooldownBase = 0.85; g.player.dashDuration = 0.26; } }
+  ];
+
+  const TRIAGE_ALERTS = [
+    { title: 'Beacon pulse gone dark at East Dock', body: 'Navigation lights are inconsistent and incoming skiffs cannot read the lane safely.', answer: 'urgent' },
+    { title: 'Duplicate chatter from three radios', body: 'Same report repeated from multiple channels with no new location or detail attached.', answer: 'noise' },
+    { title: 'Shift ledger mismatch on fuel receipts', body: 'The count is off and needs fixing before the evening handoff, but no one is blocked right now.', answer: 'soon' },
+    { title: 'Crate slid near the main footbridge', body: 'The route is partially obstructed and workers are already detouring around it.', answer: 'urgent' },
+    { title: 'Request to repaint the pier arrows', body: 'Useful housekeeping, but the current markings are still readable for today.', answer: 'soon' },
+    { title: 'Breakroom rumor about a “total port shutdown”', body: 'No source, no confirmation, all drama. Classic Static theater.', answer: 'noise' }
+  ];
+
+  const PLAN_OPTIONS = [
+    { key: 'breath_first', text: 'If a pile of alerts lands at once, then I take 3 slow breaths before touching the first one.' },
+    { key: 'sort_signal', text: 'If everything suddenly feels urgent, then I sort it into now, next, and noise before I react.' },
+    { key: 'microbreak', text: 'If I finish a hard work block, then I take a 60-second shoulder-drop and eye-reset before the next block.' },
+    { key: 'name_story', text: 'If I catch myself telling the worst-case story, then I name one fact, one uncertainty, and one next step.' }
+  ];
+
+  const DEBRIEF_SETS = {
+    relay1: {
+      title: 'Handoff note · settling the lane',
+      prompt: 'The relay is back online. Which carry-forward tactic do you want for the next block?',
+      skill: 'Short debriefs are common in simulation training because reflection plus feedback helps lock in what worked before the next pressure spike.',
+      choices: [
+        { key: 'relay_guard', text: 'Hold the rhythm', note: 'Breath Guard lasts longer and Focus jumps a little.', apply: (g) => { g.player.guardDuration += 0.08; g.player.focus = clamp(g.player.focus + 12, 0, g.player.maxFocus); } },
+        { key: 'relay_stride', text: 'Move after the exhale', note: 'Dash recharges faster and movement loosens up.', apply: (g) => { g.player.dashCooldownBase = Math.max(0.72, g.player.dashCooldownBase - 0.08); g.player.speed += 10; } }
+      ]
+    },
+    anchors: {
+      title: 'Handoff note · orienting under load',
+      prompt: 'You reopened the harbor map. Which navigation habit do you want to strengthen?',
+      skill: 'Grounding works better when it changes what the player can do next, not when it sits off to the side like homework in a trench coat.',
+      choices: [
+        { key: 'anchor_scan', text: 'Scan the edges', note: 'Grounding Pulse reaches farther and reveals more of the map.', apply: (g) => { g.player.pulseRadius += 45; } },
+        { key: 'anchor_supply', text: 'Travel with margin', note: 'Caches pay out more Lumen and restore a little health.', apply: (g) => { g.cacheBonus = (g.cacheBonus || 0) + 2; g.player.health = clamp(g.player.health + 8, 0, g.player.maxHealth); } }
+      ]
+    },
+    dispatch: {
+      title: 'Handoff note · sorting signal from noise',
+      prompt: 'The board stopped screaming. What do you want to carry into the next pressure spike?',
+      skill: 'Triage training is most useful when the categories become action verbs, not just quiz labels.',
+      choices: [
+        { key: 'dispatch_decay', text: 'Sort before sprint', note: 'Static drains faster after overloaded moments.', apply: (g) => { g.staticDecayBonus = (g.staticDecayBonus || 0) + 0.45; } },
+        { key: 'dispatch_lane', text: 'Protect the lane', note: 'Incoming hits shave off a little less damage for the rest of the run.', apply: (g) => { g.enemyDamageReduction = (g.enemyDamageReduction || 0) + 1; } }
+      ]
+    },
+    ledger: {
+      title: 'Handoff note · balanced appraisal',
+      prompt: 'The ledger is readable again. Which boss-fight lens do you want to sharpen?',
+      skill: 'Balanced appraisal is more useful than panic or fake positivity because it leaves room for the next move.',
+      choices: [
+        { key: 'ledger_fact', text: 'Facts first', note: 'Shots hit harder and Focus rises a little.', apply: (g) => { g.player.damage += 1; g.player.focus = clamp(g.player.focus + 10, 0, g.player.maxFocus); } },
+        { key: 'ledger_step', text: 'One next step', note: 'Focus capacity and recovery improve before the tower.', apply: (g) => { g.player.maxFocus += 12; g.player.focus = clamp(g.player.focus + 14, 0, g.player.maxFocus); g.focusRegenBonus = (g.focusRegenBonus || 0) + 0.8; } }
+      ]
+    }
+  };
+
+  const SUPPORT_LINES = {
+    warm: [
+      'Crew radio: You do not have to solve the whole harbor in one breath. Clear the next safe lane.',
+      'Crew radio: The load is real. Reduce the next knot, not the entire ocean.',
+      'Crew radio: Good catch. One stable step is still progress.'
+    ],
+    direct: [
+      'Crew radio: Sort. Act. Reassess.',
+      'Crew radio: One lane, one fix, then update the board.',
+      'Crew radio: Loud is not urgent. Work the next fact.'
+    ],
+    quiet: [
+      'Crew radio: Hold the next marker.',
+      'Crew radio: Name the lane. Clear it.',
+      'Crew radio: Small stable step.'
+    ]
+  };
+
+  const MAIN_CONTRACT_KEYS = ['relay1', 'anchors', 'dispatch', 'ledger'];
+  let selectedRouteStyle = 'standard';
+  let selectedLoadBand = 'medium';
+  let selectedSupportStyle = 'warm';
+  let selectedGoalFocus = 'sort';
+
+
+  function basePlayer() {
+    return {
+      x: 220,
+      y: 1440,
+      r: 18,
+      speed: 210,
+      angle: 0,
+      health: 100,
+      maxHealth: 100,
+      focus: 100,
+      maxFocus: 100,
+      static: 12,
+      fireRate: 0.21,
+      damage: 1,
+      fireCd: 0,
+      dashCd: 0,
+      dashCooldownBase: 1.1,
+      dashDuration: 0.2,
+      dashTimer: 0,
+      pulseCd: 0,
+      pulseCooldownBase: 7.2,
+      pulseRadius: 360,
+      guardCd: 0,
+      guardCooldownBase: 2.6,
+      guardTimer: 0,
+      guardDuration: 0.85,
+      invuln: 0,
+      aimAssist: false,
+      pulseWave: 0,
+      pulseWaveRadius: 0,
+      lastShotAngle: 0,
+      anchorChainTimer: 0
+    };
+  }
+
+  function mainContractCount(g) {
+    return MAIN_CONTRACT_KEYS.filter(k => g.contracts[k]).length;
+  }
+
+  function logEvent(type, data) {
+    if (!game) return;
+    game.telemetry.push(Object.assign({ t: Number(game.time.toFixed(2)), type }, data || {}));
+  }
+
+  function applyRouteStyle(g) {
+    g.routeStyle = selectedRouteStyle;
+    g.scoreMult = selectedRouteStyle === 'storm' ? 1.12 : selectedRouteStyle === 'steady' ? 0.96 : 1;
+    g.enemySpeedMul = selectedRouteStyle === 'storm' ? 1.08 : selectedRouteStyle === 'steady' ? 0.92 : 1;
+    g.player.guardDuration = selectedRouteStyle === 'storm' ? 0.76 : selectedRouteStyle === 'steady' ? 1.0 : 0.85;
+    g.player.pulseCooldownBase = selectedRouteStyle === 'storm' ? 7.7 : selectedRouteStyle === 'steady' ? 6.3 : 7.2;
+    g.player.guardCooldownBase = selectedRouteStyle === 'storm' ? 2.8 : selectedRouteStyle === 'steady' ? 2.35 : 2.6;
+    g.player.maxFocus = selectedRouteStyle === 'steady' ? 108 : 100;
+    g.player.focus = g.player.maxFocus;
+    g.routeLabel = selectedRouteStyle === 'storm' ? 'Storm route' : selectedRouteStyle === 'steady' ? 'Steady route' : 'Standard route';
+  }
+
+  function applyBriefingChoices(g) {
+    g.shiftLoad = selectedLoadBand;
+    g.supportStyle = selectedSupportStyle;
+    g.goalFocus = selectedGoalFocus;
+    g.pressureBand = 'steady';
+    g.adaptTimer = 0;
+    g.supportBoostTimer = 0;
+    g.supportLinks = 0;
+    g.debriefs = 0;
+    g.debriefHistory = [];
+    g.staticDecayBonus = 0;
+    g.focusRegenBonus = 0;
+    g.enemyDamageReduction = 0;
+    g.cacheBonus = 0;
+    if (selectedLoadBand === 'low') g.player.static = 8;
+    if (selectedLoadBand === 'high') g.player.static = 24;
+    if (selectedGoalFocus === 'settle') {
+      g.player.guardDuration += 0.08;
+      g.player.guardCooldownBase = Math.max(2.0, g.player.guardCooldownBase - 0.12);
+    }
+    if (selectedGoalFocus === 'sort') {
+      g.player.aimAssist = true;
+      g.triageTimeBonus = 4;
+    }
+    if (selectedGoalFocus === 'recover') {
+      g.player.pulseRadius += 60;
+      g.benchBonus = 8;
+    }
+  }
+
+  function showToast(text, seconds) {
+    refs.toast.textContent = text;
+    refs.toast.classList.add('show');
+    toastTimer = seconds || 2.2;
+  }
+
+  function hideAllScreens() {
+    Object.values(screens).forEach(el => el.classList.remove('active'));
+    syncTouchHudVisibility();
+  }
+
+  function syncTouchHudVisibility() {
+    if (!touchRefs.root) return;
+    const currentGame = typeof game !== 'undefined' ? game : null;
+    const visible = perf.mobile && !!currentGame && currentGame.scene === "playing";
+    touchRefs.root.classList.toggle('active', visible);
+    touchRefs.root.setAttribute('aria-hidden', visible ? "false" : "true");
+  }
+
+  function rebuildSolidCache(g) {
+    g._solidObstacles = g.obstacles.filter(o => o.solid);
+  }
+
+  function nearestEnemyTo(x, y, maxDist) {
+    if (!game) return null;
+    let best = null; let bestD = maxDist || 99999;
+    for (const e of game.enemies) {
+      if (!e.alive) continue;
+      const d = distXY(x, y, e.x, e.y);
+      if (d < bestD) { bestD = d; best = e; }
+    }
+    return best;
+  }
+
+  function resetTouchStick() {
+    touch.active = false; touch.x = 0; touch.y = 0; touch.id = null;
+    if (touchRefs.knob) touchRefs.knob.style.transform = "translate(0px, 0px)";
+  }
+
+  function updateTouchStickFromEvent(ev) {
+    if (!touchRefs.pad) return;
+    const rect = touchRefs.pad.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    let dx = (ev.clientX - cx) / (rect.width * 0.34);
+    let dy = (ev.clientY - cy) / (rect.height * 0.34);
+    const mag = Math.hypot(dx, dy);
+    if (mag > 1) { dx /= mag; dy /= mag; }
+    touch.x = dx; touch.y = dy; touch.active = mag > 0.12;
+    if (touchRefs.knob) touchRefs.knob.style.transform = `translate(${dx * 32}px, ${dy * 32}px)`;
+  }
+
+  function triggerDash() {
+    if (!game || game.scene !== "playing") return;
+    const p = game.player;
+    if (p.dashCd <= 0) { p.dashCd = p.dashCooldownBase; p.dashTimer = p.dashDuration; }
+  }
+
+  function makeGame() {
+    const g = {
+      scene: 'title',
+      startedAt: 0,
+      time: 0,
+      world: WORLD,
+      player: basePlayer(),
+      cam: { x: 0, y: 0, shake: 0 },
+      floors: [],
+      waters: [],
+      obstacles: [],
+      barriers: {},
+      decor: [],
+      enemies: [],
+      bullets: [],
+      enemyBullets: [],
+      particles: [],
+      pickups: [],
+      hiddenAnchors: [],
+      benches: [],
+      supportPosts: [],
+      boats: [],
+      lanterns: [],
+      relay1: null,
+      anchorNet: null,
+      dispatchRelay: null,
+      ledgerRelay: null,
+      beaconGate: null,
+      workshop: null,
+      boss: null,
+      triageChallenge: null,
+      debriefContext: null,
+      discovered: [],
+      score: 0,
+      lumen: 0,
+      restoration: 0,
+      breathPerfects: 0,
+      anchorsCollected: 0,
+      anchorChains: 0,
+      microbreaks: 0,
+      triageBest: 0,
+      triageAccuracy: 0,
+      contractsDone: 0,
+      upgrades: [],
+      upgradePending: false,
+      reframeContext: null,
+      breathChallenge: null,
+      summary: null,
+      telemetry: [],
+      bridgeBackPlan: null,
+      supportPulse: 0,
+      contracts: { relay1: false, anchors: false, dispatch: false, ledger: false, boss: false },
+      zones: {
+        tide: { x: 40, y: 60, w: 760, h: 760 },
+        anchors: { x: 760, y: 360, w: 760, h: 760 },
+        dispatch: { x: 1480, y: 900, w: 300, h: 260 },
+        ledger: { x: 1680, y: 900, w: 430, h: 420 },
+        boss: { x: 1880, y: 120, w: 520, h: 420 }
+      }
+    };
+    for (let y = 0; y < WORLD.rows; y++) {
+      g.discovered[y] = [];
+      for (let x = 0; x < WORLD.cols; x++) g.discovered[y][x] = false;
+    }
+    buildWorld(g);
+    rebuildSolidCache(g);
+    spawnInitial(g);
+    applyRouteStyle(g);
+    applyBriefingChoices(g);
+    g.enemies.forEach(e => { if (e.speed) e.speed *= g.enemySpeedMul; });
+    g.scene = 'playing';
+    g.startedAt = nowSeconds();
+    logEvent('run_start');
+    return g;
+  }
+
+  function buildWorld(g) {
+    g.floors.push(
+      { x: 0, y: 0, w: WORLD.w, h: WORLD.h, kind: 'ground' },
+      { x: 0, y: 0, w: 1000, h: 980, kind: 'dock' },
+      { x: 760, y: 360, w: 760, h: 760, kind: 'yard' },
+      { x: 1380, y: 0, w: 1220, h: 900, kind: 'market' },
+      { x: 720, y: 980, w: 1780, h: 820, kind: 'market' },
+      { x: 1080, y: 360, w: 320, h: 170, kind: 'dock' },
+      { x: 1080, y: 980, w: 320, h: 170, kind: 'dock' }
+    );
+
+    g.waters.push(
+      { x: 1120, y: 0, w: 240, h: 340 },
+      { x: 1120, y: 530, w: 240, h: 430 },
+      { x: 1120, y: 1150, w: 240, h: 650 },
+      { x: 0, y: 1540, w: 740, h: 260 },
+      { x: 2320, y: 0, w: 280, h: 1800 }
+    );
+    g.waters.forEach(w => g.obstacles.push({ x: w.x, y: w.y, w: w.w, h: w.h, kind: 'water', solid: true }));
+
+    const buildings = [
+      { x: 140, y: 120, w: 420, h: 240, kind: 'building', color: '#8f6b53', roof: '#9c775e', label: 'Tide Office' },
+      { x: 190, y: 640, w: 280, h: 220, kind: 'building', color: '#7c5d49', roof: '#8b6a53' },
+      { x: 500, y: 1320, w: 320, h: 220, kind: 'building', color: '#7a5a44', roof: '#86674f' },
+      { x: 770, y: 130, w: 280, h: 220, kind: 'building', color: '#7c624f', roof: '#8e735f' },
+      { x: 820, y: 1170, w: 420, h: 250, kind: 'building', color: '#6e5c4b', roof: '#7a6654', label: 'Market Hall' },
+      { x: 1580, y: 1020, w: 340, h: 220, kind: 'building', color: '#7b604a', roof: '#8a7059', label: 'Ledger House' },
+      { x: 1760, y: 1320, w: 380, h: 210, kind: 'building', color: '#6f5643', roof: '#7a604b' },
+      { x: 1960, y: 140, w: 300, h: 250, kind: 'building', color: '#6e5a47', roof: '#7d6956', label: 'Beacon Tower' },
+      { x: 2100, y: 620, w: 200, h: 120, kind: 'building', color: '#6d5442', roof: '#765c49' }
+    ];
+    buildings.forEach(b => g.obstacles.push(Object.assign({ solid: true }, b)));
+
+    const containers = [
+      [860, 560, '#a56250'], [980, 560, '#6f8a86'], [1100, 560, '#c08b4f'], [1220, 560, '#7a5a8c'],
+      [860, 690, '#7a5a8c'], [980, 690, '#a56250'], [1100, 690, '#6f8a86'], [1220, 690, '#9a7a4a'],
+      [930, 820, '#6f8a86'], [1050, 820, '#8d6756'], [1170, 820, '#a56250'], [1290, 820, '#6f8a86']
+    ];
+    containers.forEach((c, idx) => g.obstacles.push({ x: c[0], y: c[1], w: 90, h: 58, kind: 'container', color: c[2], solid: true, id: idx }));
+
+    const crates = [
+      [650, 920], [720, 930], [1660, 880], [1730, 900], [1880, 850], [1560, 1450], [1650, 1500]
+    ];
+    crates.forEach((c, idx) => g.obstacles.push({ x: c[0], y: c[1], w: 46, h: 46, kind: 'crate', solid: true, color: idx % 2 ? '#8b6a4b' : '#9d7a55' }));
+
+    g.barriers.bridge = { x: 1030, y: 390, w: 92, h: 120, kind: 'barrier', solid: true, color: '#694434', text: 'Bridge gate' };
+    g.barriers.boss = { x: 1860, y: 300, w: 70, h: 170, kind: 'barrier', solid: true, color: '#5f4333', text: 'Beacon gate' };
+    g.obstacles.push(g.barriers.bridge, g.barriers.boss);
+
+    g.relay1 = { x: 620, y: 430, r: 34, restored: false, label: 'Tidal Relay' };
+    g.anchorNet = { x: 1430, y: 980, r: 34, restored: false, label: 'Anchor Net' };
+    g.dispatchRelay = { x: 1595, y: 1030, r: 34, restored: false, label: 'Dispatch Board' };
+    g.ledgerRelay = { x: 1860, y: 1130, r: 34, restored: false, label: 'Ledger Relay' };
+    g.workshop = { x: 980, y: 1080, r: 28, used: false, label: 'Workshop' };
+    g.beaconGate = { x: 1910, y: 380, r: 34, open: false, label: 'Beacon gate' };
+    g.benches = [
+      { x: 930, y: 1450, r: 22, used: false, label: 'Tea nook' },
+      { x: 1710, y: 760, r: 22, used: false, label: 'Harbor bench' }
+    ];
+    g.supportPosts = [
+      { x: 520, y: 1180, r: 22, used: false, label: 'Crew radio west' },
+      { x: 1460, y: 1080, r: 22, used: false, label: 'Crew radio central' },
+      { x: 1760, y: 520, r: 22, used: false, label: 'Crew radio east' }
+    ];
+    g.boats = [
+      { x: 1185, y: 90, w: 52, h: 18, speed: 14, dir: 1, minY: 40, maxY: 300, color: '#8b6a53', sway: 0 },
+      { x: 1195, y: 1220, w: 58, h: 20, speed: 11, dir: -1, minY: 1180, maxY: 1710, color: '#735742', sway: 1.2 },
+      { x: 2385, y: 360, w: 54, h: 18, speed: 10, dir: 1, minY: 40, maxY: 1700, color: '#805f48', sway: 2.7 }
+    ];
+
+    g.hiddenAnchors = [
+      { x: 880, y: 1040, r: 18, revealed: false, collected: false },
+      { x: 1380, y: 430, r: 18, revealed: false, collected: false },
+      { x: 1510, y: 820, r: 18, revealed: false, collected: false }
+    ];
+
+    g.pickups.push(
+      { x: 620, y: 1110, kind: 'cache', taken: false },
+      { x: 1650, y: 760, kind: 'cache', taken: false },
+      { x: 2240, y: 820, kind: 'cache', taken: false }
+    );
+    g.lanterns = [
+      { x: 620, y: 430 }, { x: 1430, y: 980 }, { x: 1595, y: 1030 }, { x: 1860, y: 1130 }, { x: 2140, y: 460 }
+    ];
+  }
+
+  function spawnEnemy(g, kind, x, y, zone) {
+    const base = { kind, x, y, vx: 0, vy: 0, zone, stun: 0, flash: 0, attackCd: 0, shootCd: 0, alive: true, damageTaken: 0, seed: rand(x * 0.7 + y * 0.13) * 1000 };
+    if (kind === 'drifter') return Object.assign(base, { hp: 4, maxHp: 4, r: 18, speed: 90, color: '#c08a63' });
+    if (kind === 'hound') return Object.assign(base, { hp: 6, maxHp: 6, r: 20, speed: 100, color: '#7f988f' });
+    if (kind === 'buoy') return Object.assign(base, { hp: 7, maxHp: 7, r: 22, speed: 0, color: '#a36e51' });
+    if (kind === 'boss') return Object.assign(base, { hp: 30, maxHp: 30, r: 34, speed: 72, color: '#b57b56', shielded: false, phase1: false, phase2: false, summonCd: 4.5, burstCd: 2.2 });
+    return base;
+  }
+
+  function spawnInitial(g) {
+    g.enemies.push(
+      spawnEnemy(g, 'drifter', 500, 500, 'tide'),
+      spawnEnemy(g, 'drifter', 700, 280, 'tide'),
+      spawnEnemy(g, 'hound', 760, 540, 'tide'),
+      spawnEnemy(g, 'buoy', 890, 370, 'tide'),
+
+      spawnEnemy(g, 'drifter', 980, 460, 'anchors'),
+      spawnEnemy(g, 'drifter', 1400, 650, 'anchors'),
+      spawnEnemy(g, 'hound', 920, 930, 'anchors'),
+      spawnEnemy(g, 'hound', 1490, 930, 'anchors'),
+      spawnEnemy(g, 'buoy', 1280, 490, 'anchors'),
+
+      spawnEnemy(g, 'drifter', 1490, 980, 'dispatch'),
+      spawnEnemy(g, 'hound', 1710, 970, 'dispatch'),
+      spawnEnemy(g, 'buoy', 1640, 1130, 'dispatch'),
+
+      spawnEnemy(g, 'drifter', 1770, 980, 'ledger'),
+      spawnEnemy(g, 'hound', 1580, 1260, 'ledger'),
+      spawnEnemy(g, 'buoy', 1980, 1160, 'ledger')
+    );
+  }
+
+  function startGame() {
+    game = makeGame();
+    hideAllScreens();
+    updateHud();
+    showToast('Run started. Head west and restore the Tidal Relay.', 2.5);
+  }
+
+  function backToTitle() {
+    hideAllScreens();
+    screens.title.classList.add('active');
+    game = null;
+  }
+
+  function livingEnemiesInZone(zone) {
+    if (!game) return 0;
+    return game.enemies.filter(e => e.alive && e.zone === zone && e.kind !== 'boss').length;
+  }
+
+  function maybeSpawnBoss() {
+    if (!game || game.boss || !game.contracts.relay1 || !game.contracts.anchors || !game.contracts.dispatch || !game.contracts.ledger) return;
+    if (game.barriers.boss) { game.barriers.boss.solid = false; rebuildSolidCache(game); }
+    game.beaconGate.open = true;
+    game.boss = spawnEnemy(game, 'boss', 2140, 460, 'boss');
+    game.boss.hp += selectedRouteStyle === 'storm' ? 6 : 0;
+    game.boss.maxHp = game.boss.hp;
+    game.boss.speed *= game.enemySpeedMul || 1;
+    game.enemies.push(game.boss);
+    showToast('Beacon gate open. The Warden of Rush is awake.', 3);
+    logEvent('boss_spawn');
+  }
+
+  function worldMouse() {
+    if (!game) return { x: 0, y: 0 };
+    return { x: input.mouse.x + game.cam.x, y: input.mouse.y + game.cam.y };
+  }
+
+  function resetToSummary(success) {
+    if (!game) return;
+    const elapsed = game.time;
+    const healthFrac = game.player.health / game.player.maxHealth;
+    let scoreBase = Math.round((game.score + Math.round(game.restoration * 8) + game.breathPerfects * 40 + game.anchorChains * 25 + Math.round(healthFrac * 120)) * (game.scoreMult || 1));
+    if (success) scoreBase += 250;
+    let rank = 'C';
+    if (scoreBase > 1300) rank = 'S'; else if (scoreBase > 980) rank = 'A'; else if (scoreBase > 720) rank = 'B';
+    game.summary = { success, elapsed, scoreBase, rank, route: game.routeLabel, triageAccuracy: game.triageAccuracy, microbreaks: game.microbreaks };
+    game.scene = 'summary';
+    hideAllScreens();
+    screens.summary.classList.add('active');
+    refs.summaryTitle.textContent = success ? 'The harbor remembers' : 'Run ended';
+    refs.rankText.textContent = rank;
+    const stats = [
+      ['Score', Math.round(game.score)],
+      ['Restoration', Math.round(game.restoration) + '%'],
+      ['Time', elapsed.toFixed(1) + 's'],
+      ['Route', game.routeLabel],
+      ['Triage', Math.round(game.triageAccuracy * 100) + '%'],
+      ['Microbreaks', String(game.microbreaks)],
+      ['Support links', String(game.supportLinks || 0)],
+      ['Debriefs', String(game.debriefs || 0)],
+      ['Breath perfects', String(game.breathPerfects)],
+      ['Anchors chained', String(game.anchorChains)],
+      ['Lumen', String(game.lumen)]
+    ];
+    refs.summaryStats.innerHTML = stats.map(([label, value]) => '<div class="summaryStat"><div class="tiny">' + label + '</div><strong>' + value + '</strong></div>').join('');
+    refs.telemetryPreview.innerHTML = [
+      ['Route and load', game.routeLabel + ' · ' + game.shiftLoad + ' load · ' + game.goalFocus + ' focus'],
+      ['Board and tower', Math.round(game.triageAccuracy * 100) + '% triage · ' + (game.contracts.boss ? 'tower cleared' : 'tower still active')],
+      ['Recovery use', String(game.microbreaks) + ' harbor pauses · ' + String(game.supportLinks || 0) + ' crew radio visits'],
+      ['Carry-forward', (game.debriefHistory || []).length ? game.debriefHistory.map(d => d.choice).join(' · ') : 'No debrief choices logged']
+    ].map(([label, value]) => '<div class="ledgerItem"><strong>' + label + '</strong><span>' + value + '</span></div>').join('');
+    renderPlanChoices();
+    logEvent('run_end', { success, rank, score: scoreBase, route: game.routeLabel, triageAccuracy: Number(game.triageAccuracy.toFixed(2)) });
+  }
+
+  function renderPlanChoices() {
+    if (!game) return;
+    refs.planChoices.innerHTML = '';
+    PLAN_OPTIONS.forEach(plan => {
+      const btn = document.createElement('button');
+      btn.className = 'choiceBtn planBtn' + (game.bridgeBackPlan === plan.key ? ' active' : '');
+      btn.innerHTML = '<strong>' + plan.text + '</strong><small>Save locally in this browser.</small>';
+      btn.addEventListener('click', () => {
+        game.bridgeBackPlan = plan.key;
+        refs.planSaved.textContent = 'Saved plan: ' + plan.text;
+        try { localStorage.setItem('harbor_bridge_back_plan', JSON.stringify(plan)); } catch (err) {}
+        renderPlanChoices();
+        logEvent('bridge_back_plan', { key: plan.key });
+      });
+      refs.planChoices.appendChild(btn);
+    });
+    if (!game.bridgeBackPlan) {
+      refs.planSaved.textContent = 'No plan chosen yet.';
+    } else {
+      const chosen = PLAN_OPTIONS.find(p => p.key === game.bridgeBackPlan);
+      refs.planSaved.textContent = chosen ? 'Saved plan: ' + chosen.text : '';
+    }
+  }
+
+  function openDebrief(setKey, afterChoice) {
+    if (!game) return;
+    const set = DEBRIEF_SETS[setKey];
+    if (!set) { if (afterChoice) afterChoice(null); return; }
+    game.scene = 'debrief';
+    game.debriefContext = { key: setKey, afterChoice };
+    hideAllScreens();
+    screens.debrief.classList.add('active');
+    refs.debriefTitle.textContent = set.title;
+    refs.debriefPrompt.textContent = set.prompt;
+    refs.debriefSkillText.textContent = set.skill;
+    refs.debriefChoices.innerHTML = '';
+    set.choices.forEach((choice, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'choiceBtn';
+      btn.innerHTML = '<strong>' + choice.text + '</strong><small>' + choice.note + '</small>';
+      btn.addEventListener('click', () => resolveDebrief(idx));
+      refs.debriefChoices.appendChild(btn);
+    });
+    logEvent('debrief_open', { key: setKey });
+  }
+
+  function resolveDebrief(choiceIdx) {
+    if (!game || !game.debriefContext) return;
+    const key = game.debriefContext.key;
+    const set = DEBRIEF_SETS[key];
+    const choice = set && set.choices[choiceIdx];
+    if (choice && choice.apply) choice.apply(game);
+    game.debriefs = (game.debriefs || 0) + 1;
+    game.debriefHistory.push({ key, choice: choice ? choice.key : 'none' });
+    logEvent('debrief_choice', { key, choice: choice ? choice.key : 'none' });
+    const after = game.debriefContext.afterChoice;
+    game.debriefContext = null;
+    game.scene = 'playing';
+    hideAllScreens();
+    if (choice) showToast('Carry-forward tactic logged: ' + choice.text + '.', 2.2);
+    if (after) after(choice ? choice.key : null);
+  }
+
+  function skipDebrief() {
+    if (!game || !game.debriefContext) return;
+    const key = game.debriefContext.key;
+    const after = game.debriefContext.afterChoice;
+    logEvent('debrief_skip', { key });
+    game.debriefContext = null;
+    game.scene = 'playing';
+    hideAllScreens();
+    if (after) after(null);
+  }
+
+  function useSupportPost(post) {
+    if (!game || !post || post.used) return;
+    post.used = true;
+    game.supportLinks = (game.supportLinks || 0) + 1;
+    game.player.health = clamp(game.player.health + 6, 0, game.player.maxHealth);
+    game.player.focus = clamp(game.player.focus + 18, 0, game.player.maxFocus);
+    game.player.static = clamp(game.player.static - 18, 0, 100);
+    game.supportBoostTimer = Math.max(game.supportBoostTimer || 0, 42);
+    game.score += 34;
+    const bank = SUPPORT_LINES[game.supportStyle] || SUPPORT_LINES.warm;
+    const msg = bank[(game.supportLinks - 1) % bank.length];
+    showToast(msg, 3);
+    logEvent('support_link', { label: post.label, style: game.supportStyle });
+  }
+
+  function updateAdaptiveBand(dt) {
+    if (!game) return;
+    if (game.supportBoostTimer > 0) game.supportBoostTimer = Math.max(0, game.supportBoostTimer - dt);
+    game.adaptTimer = (game.adaptTimer || 0) - dt;
+    if (game.adaptTimer > 0) return;
+    game.adaptTimer = 0.4;
+    const p = game.player;
+    let nearby = 0;
+    for (const e of game.enemies) if (e.alive && distXY(e.x, e.y, p.x, p.y) < 220) nearby += 1;
+    const strain = p.static * 0.72 + (1 - p.health / p.maxHealth) * 32 + (1 - p.focus / p.maxFocus) * 22 + nearby * 8 - (game.supportBoostTimer > 0 ? 8 : 0);
+    let band = 'steady';
+    if (strain >= 92) band = 'strained';
+    else if (strain >= 60) band = 'loaded';
+    else if (strain <= 24) band = 'clear';
+    if (band !== game.pressureBand) {
+      game.pressureBand = band;
+      logEvent('pressure_band', { band });
+      if (band === 'strained') showToast('Pressure spike. A bench or crew radio post can buy back margin.', 2);
+    }
+  }
+
+  function openTriage() {
+    if (!game || game.dispatchRelay.restored) return;
+    const deck = TRIAGE_ALERTS.slice().sort((a, b) => rand(a.title.length * 13 + game.time) - rand(b.title.length * 17 + game.player.x)).slice(0, 6);
+    game.triageChallenge = { deck, idx: 0, correct: 0, time: 32 + (game.triageTimeBonus || 0), history: [] };
+    game.scene = 'triage';
+    hideAllScreens();
+    screens.triage.classList.add('active');
+    renderTriageCard();
+    logEvent('triage_start');
+  }
+
+  function renderTriageCard() {
+    if (!game || !game.triageChallenge) return;
+    const tc = game.triageChallenge;
+    const item = tc.deck[tc.idx];
+    refs.triageCount.textContent = tc.idx + ' / ' + tc.deck.length;
+    refs.triageCorrect.textContent = tc.correct;
+    refs.triageTime.textContent = Math.max(0, tc.time).toFixed(1) + 's';
+    if (!item) return;
+    refs.triageAlertTitle.textContent = item.title;
+    refs.triageAlertBody.textContent = item.body;
+  }
+
+  function resolveTriageChoice(choice) {
+    if (!game || game.scene !== 'triage' || !game.triageChallenge) return;
+    const tc = game.triageChallenge;
+    const item = tc.deck[tc.idx];
+    if (!item) return;
+    const correct = choice === item.answer;
+    if (correct) {
+      tc.correct += 1;
+      game.player.focus = clamp(game.player.focus + 6, 0, game.player.maxFocus);
+      game.score += 24;
+    } else {
+      game.player.static = clamp(game.player.static + 8, 0, 100);
+      game.player.health = clamp(game.player.health - 3, 0, game.player.maxHealth);
+      game.cam.shake = Math.max(game.cam.shake, 4);
+    }
+    tc.history.push({ title: item.title, choice, answer: item.answer, correct });
+    logEvent('triage_choice', { item: item.title, choice, answer: item.answer, correct });
+    tc.idx += 1;
+    if (tc.idx >= tc.deck.length) {
+      finishDispatchChallenge();
+    } else {
+      renderTriageCard();
+    }
+  }
+
+  function finishDispatchChallenge() {
+    if (!game || !game.triageChallenge) return;
+    const tc = game.triageChallenge;
+    game.triageAccuracy = tc.correct / tc.deck.length;
+    game.triageBest = Math.max(game.triageBest, tc.correct);
+    const passed = tc.correct >= 4;
+    game.scene = 'playing';
+    hideAllScreens();
+    const summary = tc.correct + ' / ' + tc.deck.length;
+    if (passed) {
+      finishDispatch();
+    } else {
+      showToast('Dispatch Board still noisy. Sorted ' + summary + '. You can try again.', 2.4);
+      game.player.static = clamp(game.player.static + 10, 0, 100);
+      spawnPressureAdds(game.dispatchRelay.x, game.dispatchRelay.y, 1);
+      logEvent('triage_fail', { correct: tc.correct, total: tc.deck.length });
+    }
+    game.triageChallenge = null;
+  }
+
+  function finishDispatch() {
+    if (!game || game.dispatchRelay.restored) return;
+    game.dispatchRelay.restored = true;
+    game.contracts.dispatch = true;
+    game.contractsDone = mainContractCount(game);
+    game.restoration = Math.max(game.restoration, 75);
+    game.score += 210;
+    game.player.focus = clamp(game.player.focus + 15, 0, game.player.maxFocus);
+    logEvent('contract_complete', { contract: 'dispatch', triageAccuracy: Number(game.triageAccuracy.toFixed(2)) });
+    openDebrief('dispatch', () => { showToast('Dispatch Board restored. Sorted the lane.', 2.3); });
+  }
+
+  function useBench(bench) {
+    if (!game || !bench || bench.used) return;
+    bench.used = true;
+    game.player.health = clamp(game.player.health + 10 + (game.benchBonus || 0), 0, game.player.maxHealth);
+    game.player.focus = clamp(game.player.focus + 24 + (game.supportBoostTimer > 0 ? 6 : 0), 0, game.player.maxFocus);
+    game.player.static = clamp(game.player.static - 20 - (game.supportBoostTimer > 0 ? 4 : 0), 0, 100);
+    game.microbreaks += 1;
+    game.score += 36;
+    showToast('Harbor pause taken. Static down.', 1.8);
+    logEvent('microbreak', { label: bench.label });
+  }
+
+  function openReframe(setKey, onResolve) {
+    if (!game) return;
+    const set = REFRAME_SETS[setKey];
+    game.scene = 'reframe';
+    game.reframeContext = { key: setKey, onResolve };
+    hideAllScreens();
+    screens.reframe.classList.add('active');
+    refs.reframeTitle.textContent = set.title;
+    refs.reframePrompt.textContent = set.prompt;
+    refs.reframeChoices.innerHTML = '';
+    set.choices.forEach((c, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'choiceBtn';
+      btn.innerHTML = '<strong>' + c.text + '</strong><small>' + c.note + '</small>';
+      btn.addEventListener('click', () => resolveReframe(idx));
+      refs.reframeChoices.appendChild(btn);
+    });
+  }
+
+  function resolveReframe(choiceIdx) {
+    if (!game || !game.reframeContext) return;
+    const set = REFRAME_SETS[game.reframeContext.key];
+    const correct = choiceIdx === set.correct;
+    logEvent('reframe', { key: game.reframeContext.key, choice: choiceIdx, correct });
+    const resolver = game.reframeContext.onResolve;
+    game.reframeContext = null;
+    game.scene = 'playing';
+    hideAllScreens();
+    if (correct) {
+      showToast('Balanced read chosen. Distortion broken.', 2.1);
+      game.score += 110;
+      game.player.focus = clamp(game.player.focus + 18, 0, game.player.maxFocus);
+      if (resolver) resolver(true);
+    } else {
+      showToast('That reading adds noise. You can still recover.', 2.3);
+      game.player.static = clamp(game.player.static + 18, 0, 100);
+      game.player.health = clamp(game.player.health - 8, 0, game.player.maxHealth);
+      game.cam.shake = 6;
+      if (resolver) resolver(false);
+    }
+  }
+
+  function openUpgrade() {
+    if (!game || game.upgradePending) return;
+    game.upgradePending = true;
+    game.scene = 'upgrade';
+    hideAllScreens();
+    screens.upgrade.classList.add('active');
+    refs.upgradeChoices.innerHTML = '';
+    UPGRADE_OPTIONS.forEach(opt => {
+      const wrap = document.createElement('div');
+      wrap.className = 'panel';
+      wrap.style.padding = '16px';
+      const btn = document.createElement('button');
+      btn.className = 'choiceBtn';
+      btn.innerHTML = '<strong>' + opt.title + '</strong><small>' + opt.text + '</small>';
+      btn.addEventListener('click', () => {
+        opt.apply(game);
+        game.upgrades.push(opt.key);
+        game.upgradePending = false;
+        game.scene = 'playing';
+        hideAllScreens();
+        showToast(opt.title + ' equipped.', 2.1);
+        logEvent('upgrade', { key: opt.key });
+      });
+      wrap.appendChild(btn);
+      refs.upgradeChoices.appendChild(wrap);
+    });
+  }
+
+  function startBreathChallenge() {
+    if (!game || game.relay1.restored) return;
+    game.scene = 'breath';
+    game.breathChallenge = { time: 8, hits: 0, angle: -Math.PI / 2, speed: 2.8, success: false };
+    refs.breathCount.textContent = '0 / 4';
+    refs.breathTime.textContent = '8.0s';
+    hideAllScreens();
+    screens.breath.classList.add('active');
+    logEvent('breath_challenge_start');
+  }
+
+  function resolveBreathTap() {
+    if (!game || game.scene !== 'breath' || !game.breathChallenge) return;
+    const c = game.breathChallenge;
+    const targetStart = -0.45;
+    const targetEnd = 0.32;
+    let a = c.angle;
+    while (a < -Math.PI) a += Math.PI * 2;
+    while (a > Math.PI) a -= Math.PI * 2;
+    const good = a >= targetStart && a <= targetEnd;
+    logEvent('breath_tap', { angle: Number(a.toFixed(2)), good });
+    if (good) {
+      c.hits += 1;
+      refs.breathCount.textContent = c.hits + ' / 4';
+      if (c.hits >= 4) {
+        c.success = true;
+        finishRelay1();
+      }
+    } else {
+      c.time = Math.max(0, c.time - 0.6);
+      showToast('Missed the exhale window.', 1.1);
+    }
+  }
+
+  function finishRelay1() {
+    if (!game || game.relay1.restored) return;
+    game.relay1.restored = true;
+    game.contracts.relay1 = true;
+    game.contractsDone = mainContractCount(game);
+    game.restoration = 25;
+    if (game.barriers.bridge) { game.barriers.bridge.solid = false; rebuildSolidCache(game); }
+    game.scene = 'playing';
+    game.breathChallenge = null;
+    hideAllScreens();
+    game.score += 180;
+    game.player.focus = 100;
+    game.player.static = Math.max(0, game.player.static - 18);
+    game.breathPerfects += 4;
+    logEvent('contract_complete', { contract: 'relay1' });
+    openDebrief('relay1', () => { showToast('Tidal Relay restored. The east bridge is open.', 2.5); openUpgrade(); });
+  }
+
+  function finishAnchors() {
+    if (!game || game.anchorNet.restored) return;
+    game.anchorNet.restored = true;
+    game.contracts.anchors = true;
+    game.contractsDone = mainContractCount(game);
+    game.restoration = Math.max(game.restoration, 50);
+    game.score += 180;
+    game.player.focus = clamp(game.player.focus + 20, 0, game.player.maxFocus);
+    logEvent('contract_complete', { contract: 'anchors' });
+    openDebrief('anchors', () => { showToast('Anchor Net restored. Harbor routes are visible again.', 2.4); });
+  }
+
+  function finishLedger() {
+    if (!game || game.ledgerRelay.restored) return;
+    game.ledgerRelay.restored = true;
+    game.contracts.ledger = true;
+    game.contractsDone = mainContractCount(game);
+    game.restoration = Math.max(game.restoration, 90);
+    game.score += 200;
+    logEvent('contract_complete', { contract: 'ledger' });
+    openDebrief('ledger', () => { showToast('Ledger Relay repaired. The beacon route is now stable.', 2.5); maybeSpawnBoss(); });
+  }
+
+  function interact() {
+    if (!game || game.scene !== 'playing') return;
+    const p = game.player;
+    if (!game.relay1.restored && distXY(p.x, p.y, game.relay1.x, game.relay1.y) < 64) {
+      if (livingEnemiesInZone('tide') > 0) {
+        showToast('Clear the Tide Office yard first.', 1.8);
+      } else {
+        startBreathChallenge();
+      }
+      return;
+    }
+    if (!game.anchorNet.restored && distXY(p.x, p.y, game.anchorNet.x, game.anchorNet.y) < 64) {
+      if (game.anchorsCollected < 3) {
+        showToast('Recover all three anchors before restoring the net.', 1.8);
+      } else {
+        finishAnchors();
+      }
+      return;
+    }
+    if (game.contracts.anchors && !game.dispatchRelay.restored && distXY(p.x, p.y, game.dispatchRelay.x, game.dispatchRelay.y) < 64) {
+      if (livingEnemiesInZone('dispatch') > 0) {
+        showToast('Clear the Dispatch House first.', 1.8);
+      } else {
+        openTriage();
+      }
+      return;
+    }
+    if (game.contracts.dispatch && !game.ledgerRelay.restored && distXY(p.x, p.y, game.ledgerRelay.x, game.ledgerRelay.y) < 64) {
+      if (livingEnemiesInZone('ledger') > 0) {
+        showToast('Clear the Ledger House first.', 1.8);
+      } else {
+        openReframe('ledger1', ok1 => {
+          if (ok1) {
+            openReframe('ledger2', ok2 => {
+              finishLedger();
+              if (!ok2) spawnPressureAdds(1820, 1120, 1);
+            });
+          } else {
+            spawnPressureAdds(1820, 1120, 2);
+            openReframe('ledger2', ok2 => { finishLedger(); if (!ok2) spawnPressureAdds(1820, 1100, 1); });
+          }
+        });
+      }
+      return;
+    }
+    if (!game.workshop.used && distXY(p.x, p.y, game.workshop.x, game.workshop.y) < 54 && game.contracts.relay1) {
+      game.workshop.used = true;
+      openUpgrade();
+      return;
+    }
+    for (const post of game.supportPosts) {
+      if (!post.used && distXY(p.x, p.y, post.x, post.y) < 58) {
+        useSupportPost(post);
+        return;
+      }
+    }
+    for (const bench of game.benches) {
+      if (!bench.used && distXY(p.x, p.y, bench.x, bench.y) < 54) {
+        useBench(bench);
+        return;
+      }
+    }
+    if (game.beaconGate.open && distXY(p.x, p.y, 1960, 420) < 80 && !game.contracts.boss) {
+      showToast('The tower is open. Finish the Warden.', 1.4);
+    }
+  }
+
+  function spawnPressureAdds(x, y, n) {
+    for (let i = 0; i < n; i++) {
+      const foe = spawnEnemy(game, i % 2 ? 'drifter' : 'hound', x + rand(i + x) * 120 - 60, y + rand(i + y) * 120 - 60, 'boss');
+      if (foe.speed) foe.speed *= game.enemySpeedMul || 1;
+      game.enemies.push(foe);
+    }
+  }
+
+  function awardLumen(x, y, amount) {
+    for (let i = 0; i < amount; i++) {
+      game.pickups.push({ x: x + rand(i * 7 + x) * 22 - 11, y: y + rand(i * 11 + y) * 22 - 11, kind: 'lumen', taken: false, vy: -20 - rand(i * 5 + y) * 20, t: 0 });
+    }
+  }
+
+  function killEnemy(e) {
+    if (!e.alive) return;
+    e.alive = false;
+    game.score += e.kind === 'boss' ? 600 : e.kind === 'buoy' ? 90 : e.kind === 'hound' ? 70 : 50;
+    awardLumen(e.x, e.y, e.kind === 'boss' ? 10 : e.kind === 'buoy' ? 3 : 2);
+    logEvent('enemy_down', { enemy: e.kind, zone: e.zone });
+    if (e.kind === 'boss') {
+      game.contracts.boss = true;
+      game.restoration = 100;
+      game.contractsDone = 4;
+      showToast('Beacon tower restored.', 2.6);
+      setTimeout(() => resetToSummary(true), 900);
+    }
+  }
+
+  function hurtPlayer(amount, source) {
+    if (!game) return;
+    const p = game.player;
+    if (p.invuln > 0) return;
+    let applied = amount;
+    let perfect = false;
+    if (p.guardTimer > 0) {
+      const progress = 1 - p.guardTimer / p.guardDuration;
+      if (progress > 0.28 && progress < 0.62) {
+        applied = 0;
+        perfect = true;
+        p.static = Math.max(0, p.static - 14);
+        p.focus = clamp(p.focus + 18, 0, p.maxFocus);
+        game.breathPerfects += 1;
+        game.score += 35;
+        game.cam.shake = 4;
+        if (source && source.kind) source.stun = 1.1;
+        if (source && source.vx !== undefined) { source.alive = false; }
+        logEvent('guard', { perfect: true });
+        showToast('Steady guard.', 0.9);
+      } else {
+        applied = amount * 0.34;
+        p.static = Math.max(0, p.static - 4);
+        logEvent('guard', { perfect: false });
+      }
+    }
+    if (applied > 0) {
+      applied = Math.max(0, applied - (game.enemyDamageReduction || 0) - (game.supportBoostTimer > 0 ? 1 : 0));
+      p.health = clamp(p.health - applied, 0, p.maxHealth);
+      p.static = clamp(p.static + applied * 1.7, 0, 100);
+      p.invuln = 0.42;
+      game.cam.shake = Math.max(game.cam.shake, 8);
+      logEvent('damage', { amount: Number(applied.toFixed(2)) });
+      if (p.health <= 0) resetToSummary(false);
+    }
+    if (perfect) {
+      for (const enemy of game.enemies) {
+        if (enemy.alive && distXY(enemy.x, enemy.y, p.x, p.y) < 90) enemy.stun = Math.max(enemy.stun, 0.8);
+      }
+    }
+  }
+
+  function shootPlayer() {
+    if (!game || game.scene !== 'playing') return;
+    const p = game.player;
+    if (p.fireCd > 0) return;
+    let ang = p.angle;
+    let target = null;
+    if (p.aimAssist) {
+      let best = null;
+      let bestScore = 99999;
+      for (const e of game.enemies) {
+        if (!e.alive) continue;
+        const d = distXY(p.x, p.y, e.x, e.y);
+        if (d > 420) continue;
+        const a = Math.atan2(e.y - p.y, e.x - p.x);
+        const delta = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
+        const score = delta * 200 + d;
+        if (score < bestScore) { bestScore = score; best = e; }
+      }
+      target = best;
+      if (target) ang = Math.atan2(target.y - p.y, target.x - p.x);
+    }
+    p.fireCd = p.fireRate;
+    p.lastShotAngle = ang;
+    game.bullets.push({ x: p.x + Math.cos(ang) * 26, y: p.y + Math.sin(ang) * 26, vx: Math.cos(ang) * 560, vy: Math.sin(ang) * 560, r: 5, dmg: p.damage, life: 0.8, alive: true });
+    for (let i = 0; i < 4; i++) game.particles.push({ x: p.x, y: p.y, vx: Math.cos(ang) * (60 + i * 12) + (rand(i + p.x) - 0.5) * 40, vy: Math.sin(ang) * (60 + i * 12) + (rand(i + p.y) - 0.5) * 40, life: 0.28, age: 0, color: '#ecd0a2', size: 2 + i * 0.5 });
+  }
+
+  function useGuard() {
+    if (!game || game.scene !== 'playing') return;
+    const p = game.player;
+    if (p.guardCd > 0 || p.focus < 8) return;
+    p.guardCd = p.guardCooldownBase;
+    p.guardTimer = p.guardDuration;
+    p.focus = clamp(p.focus - 8, 0, p.maxFocus);
+  }
+
+  function usePulse() {
+    if (!game || game.scene !== 'playing') return;
+    const p = game.player;
+    if (p.pulseCd > 0 || p.focus < 24) return;
+    p.pulseCd = p.pulseCooldownBase;
+    p.focus = clamp(p.focus - 24, 0, p.maxFocus);
+    p.pulseWave = 0.7;
+    p.pulseWaveRadius = 0;
+    logEvent('pulse');
+    for (const enemy of game.enemies) {
+      if (!enemy.alive) continue;
+      const d = distXY(enemy.x, enemy.y, p.x, p.y);
+      if (d < p.pulseRadius) {
+        enemy.stun = Math.max(enemy.stun, 0.9);
+        enemy.flash = 0.2;
+      }
+    }
+    for (const a of game.hiddenAnchors) {
+      if (!a.collected && distXY(a.x, a.y, p.x, p.y) < p.pulseRadius + 60) a.revealed = true;
+    }
+    for (const pick of game.pickups) {
+      if (pick.kind === 'cache' && !pick.taken && distXY(pick.x, pick.y, p.x, p.y) < p.pulseRadius) {
+        pick.revealed = true;
+      }
+    }
+    revealCells(p.x, p.y, p.pulseRadius + 120);
+    game.score += 20;
+  }
+
+  function revealCells(x, y, r) {
+    const cell = WORLD.cell;
+    const c0 = clamp(Math.floor((x - r) / cell), 0, WORLD.cols - 1);
+    const c1 = clamp(Math.floor((x + r) / cell), 0, WORLD.cols - 1);
+    const r0 = clamp(Math.floor((y - r) / cell), 0, WORLD.rows - 1);
+    const r1 = clamp(Math.floor((y + r) / cell), 0, WORLD.rows - 1);
+    for (let cy = r0; cy <= r1; cy++) {
+      for (let cx = c0; cx <= c1; cx++) {
+        const px = cx * cell + cell * 0.5;
+        const py = cy * cell + cell * 0.5;
+        if (distXY(px, py, x, y) <= r) game.discovered[cy][cx] = true;
+      }
+    }
+  }
+
+  function tryCollects() {
+    if (!game) return;
+    const p = game.player;
+    for (const pick of game.pickups) {
+      if (pick.taken) continue;
+      if (distXY(p.x, p.y, pick.x, pick.y) < 28) {
+        pick.taken = true;
+        if (pick.kind === 'lumen') {
+          game.lumen += 1;
+          game.score += 8;
+        } else if (pick.kind === 'cache') {
+          game.lumen += 6 + (game.cacheBonus || 0);
+          game.score += 40 + (game.cacheBonus || 0) * 6;
+          p.focus = clamp(p.focus + 18, 0, p.maxFocus);
+          p.health = clamp(p.health + (game.cacheBonus || 0) * 2, 0, p.maxHealth);
+          showToast('Supply cache found.', 1.6);
+          logEvent('cache_found');
+        }
+      }
+    }
+    for (const a of game.hiddenAnchors) {
+      if (a.collected || !a.revealed) continue;
+      if (distXY(p.x, p.y, a.x, a.y) < 30) {
+        a.collected = true;
+        game.anchorsCollected += 1;
+        game.score += 75;
+        if (p.anchorChainTimer > 0) game.anchorChains += 1;
+        p.anchorChainTimer = 18;
+        showToast('Harbor anchor recovered.', 1.5);
+        logEvent('anchor_collect', { count: game.anchorsCollected });
+      }
+    }
+  }
+
+  function solidObstacles() {
+    return game && game._solidObstacles ? game._solidObstacles : [];
+  }
+
+  function moveCircle(entity, dx, dy) {
+    entity.x += dx;
+    for (const ob of solidObstacles()) {
+      if (circleRectCollision(entity.x, entity.y, entity.r, ob)) {
+        if (dx > 0) entity.x = ob.x - entity.r;
+        if (dx < 0) entity.x = ob.x + ob.w + entity.r;
+      }
+    }
+    entity.y += dy;
+    for (const ob of solidObstacles()) {
+      if (circleRectCollision(entity.x, entity.y, entity.r, ob)) {
+        if (dy > 0) entity.y = ob.y - entity.r;
+        if (dy < 0) entity.y = ob.y + ob.h + entity.r;
+      }
+    }
+    entity.x = clamp(entity.x, entity.r, WORLD.w - entity.r);
+    entity.y = clamp(entity.y, entity.r, WORLD.h - entity.r);
+  }
+
+  function updateBullets(list, dt, fromEnemy) {
+    for (const b of list) {
+      if (!b.alive) continue;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.life -= dt;
+      if (b.life <= 0 || b.x < -40 || b.y < -40 || b.x > WORLD.w + 40 || b.y > WORLD.h + 40) { b.alive = false; continue; }
+      for (const ob of solidObstacles()) {
+        if (ob.kind === 'barrier' && !ob.solid) continue;
+        if (circleRectCollision(b.x, b.y, b.r || 5, ob)) { b.alive = false; break; }
+      }
+      if (!b.alive) continue;
+      if (fromEnemy) {
+        if (distXY(b.x, b.y, game.player.x, game.player.y) < game.player.r + (b.r || 5)) {
+          hurtPlayer(b.damage || 10, b);
+          b.alive = false;
+        }
+      } else {
+        for (const e of game.enemies) {
+          if (!e.alive) continue;
+          if (distXY(b.x, b.y, e.x, e.y) < e.r + (b.r || 5)) {
+            e.hp -= b.dmg || 1;
+            e.flash = 0.12;
+            b.alive = false;
+            if (e.hp <= 0) killEnemy(e);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  function updateEnemy(e, dt) {
+    if (!e.alive) return;
+    if (e.flash > 0) e.flash -= dt;
+    if (e.stun > 0) { e.stun -= dt; return; }
+    e.attackCd = Math.max(0, e.attackCd - dt);
+    e.shootCd = Math.max(0, e.shootCd - dt);
+    const p = game.player;
+    const d = distXY(e.x, e.y, p.x, p.y);
+    if (e.kind === 'drifter') {
+      if (d < 460) {
+        const a = Math.atan2(p.y - e.y, p.x - e.x);
+        e.vx = Math.cos(a) * e.speed;
+        e.vy = Math.sin(a) * e.speed;
+        moveCircle(e, e.vx * dt, e.vy * dt);
+      }
+      if (d < e.r + p.r + 6 && e.attackCd <= 0) {
+        e.attackCd = 0.75;
+        hurtPlayer(10, e);
+      }
+    } else if (e.kind === 'hound') {
+      if (d < 560) {
+        const a = Math.atan2(p.y - e.y, p.x - e.x);
+        const tangent = a + Math.PI / 2 * (rand(e.seed + Math.floor(game.time * 2)) > 0.5 ? 1 : -1);
+        const desire = d > 210 ? 1 : d < 150 ? -1 : 0;
+        const mx = Math.cos(a) * desire * e.speed * 0.9 + Math.cos(tangent) * e.speed * 0.5;
+        const my = Math.sin(a) * desire * e.speed * 0.9 + Math.sin(tangent) * e.speed * 0.5;
+        moveCircle(e, mx * dt, my * dt);
+        if (d < 380 && e.shootCd <= 0) {
+          e.shootCd = 1.6;
+          const aim = Math.atan2(p.y - e.y, p.x - e.x);
+          game.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(aim) * 290, vy: Math.sin(aim) * 290, r: 5, damage: 8, life: 2.0, alive: true });
+        }
+      }
+    } else if (e.kind === 'buoy') {
+      if (d < 520 && e.shootCd <= 0) {
+        e.shootCd = 1.3;
+        const aim = Math.atan2(p.y - e.y, p.x - e.x);
+        for (let off = -0.16; off <= 0.16; off += 0.16) {
+          game.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(aim + off) * 250, vy: Math.sin(aim + off) * 250, r: 5, damage: 7, life: 2.2, alive: true });
+        }
+      }
+    } else if (e.kind === 'boss') {
+      const arena = game.zones.boss;
+      if (e.hp <= 20 && !e.phase1) {
+        e.phase1 = true;
+        e.shielded = true;
+        openReframe('boss1', ok => {
+          e.shielded = false;
+          e.stun = ok ? 1.6 : 0.7;
+          if (!ok) spawnPressureAdds(e.x, e.y, 2);
+        });
+        return;
+      }
+      if (e.hp <= 10 && !e.phase2) {
+        e.phase2 = true;
+        e.shielded = true;
+        openReframe('boss2', ok => {
+          e.shielded = false;
+          e.stun = ok ? 1.8 : 0.9;
+          if (!ok) spawnPressureAdds(e.x, e.y, 3);
+        });
+        return;
+      }
+      if (d > 150) {
+        const a = Math.atan2(p.y - e.y, p.x - e.x);
+        moveCircle(e, Math.cos(a) * e.speed * dt, Math.sin(a) * e.speed * dt);
+      }
+      if (e.burstCd <= 0) {
+        e.burstCd = 2.1;
+        for (let i = 0; i < perf.waveLines; i++) {
+          const a = (Math.PI * 2 * i) / 12 + game.time * 0.4;
+          game.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, r: 6, damage: 9, life: 2.8, alive: true });
+        }
+      } else {
+        e.burstCd -= dt;
+      }
+      e.summonCd -= dt;
+      if (e.summonCd <= 0) {
+        e.summonCd = 5.2;
+        spawnPressureAdds(e.x + 30, e.y + 20, 1);
+      }
+      e.x = clamp(e.x, arena.x + e.r, arena.x + arena.w - e.r);
+      e.y = clamp(e.y, arena.y + e.r, arena.y + arena.h - e.r);
+    }
+  }
+
+  function updatePlayer(dt) {
+    const p = game.player;
+    p.fireCd = Math.max(0, p.fireCd - dt);
+    p.dashCd = Math.max(0, p.dashCd - dt);
+    p.pulseCd = Math.max(0, p.pulseCd - dt);
+    p.guardCd = Math.max(0, p.guardCd - dt);
+    p.guardTimer = Math.max(0, p.guardTimer - dt);
+    p.invuln = Math.max(0, p.invuln - dt);
+    const focusRegen = 7.2 + (game.focusRegenBonus || 0) + (game.pressureBand === 'strained' ? 1.4 : game.pressureBand === 'loaded' ? 0.55 : 0) + (game.supportBoostTimer > 0 ? 0.8 : 0);
+    const staticDecay = 1.2 + (game.staticDecayBonus || 0) + (game.pressureBand === 'strained' ? 0.95 : game.pressureBand === 'loaded' ? 0.35 : 0) + (game.supportBoostTimer > 0 ? 0.35 : 0);
+    p.focus = clamp(p.focus + dt * focusRegen, 0, p.maxFocus);
+    p.static = clamp(p.static - dt * staticDecay, 0, 100);
+    if (p.anchorChainTimer > 0) p.anchorChainTimer -= dt;
+    if (p.pulseWave > 0) {
+      p.pulseWave -= dt;
+      p.pulseWaveRadius = lerp(0, p.pulseRadius, 1 - p.pulseWave / 0.7);
+    } else {
+      p.pulseWaveRadius = 0;
+    }
+
+    const m = worldMouse();
+    input.mouse.worldX = m.x;
+    input.mouse.worldY = m.y;
+    if (input.mouse.moved) {
+      p.angle = Math.atan2(m.y - p.y, m.x - p.x);
+    }
+
+    let mx = 0;
+    let my = 0;
+    if (input.keys['KeyW'] || input.keys['ArrowUp']) my -= 1;
+    if (input.keys['KeyS'] || input.keys['ArrowDown']) my += 1;
+    if (input.keys['KeyA'] || input.keys['ArrowLeft']) mx -= 1;
+    if (input.keys['KeyD'] || input.keys['ArrowRight']) mx += 1;
+    if (perf.mobile && touch.active) { mx += touch.x; my += touch.y; }
+    if (mx || my) {
+      const len = Math.hypot(mx, my) || 1;
+      mx /= len; my /= len;
+      if (!input.mouse.moved && !(perf.mobile && touch.fire)) p.angle = Math.atan2(my, mx);
+    }
+    if (perf.mobile) {
+      const target = touch.fire ? nearestEnemyTo(p.x, p.y, 540) : null;
+      if (target) p.angle = Math.atan2(target.y - p.y, target.x - p.x);
+      else if (!input.mouse.moved && (touch.active || (mx || my))) p.angle = Math.atan2(my || Math.sin(p.angle), mx || Math.cos(p.angle));
+    }
+
+    if (input.pressed['ShiftLeft'] || input.pressed['ShiftRight']) {
+      if (p.dashCd <= 0) {
+        p.dashCd = p.dashCooldownBase;
+        p.dashTimer = p.dashDuration;
+      }
+    }
+    if (p.dashTimer > 0) p.dashTimer -= dt;
+    let speed = p.speed * (p.static > 75 ? 0.92 : 1);
+    if (game.pressureBand === 'strained') speed *= 1.04;
+    if (game.supportBoostTimer > 0) speed *= 1.06;
+    if (p.dashTimer > 0) speed *= 2.7;
+    moveCircle(p, mx * speed * dt, my * speed * dt);
+
+    if (input.mouse.leftPressed || input.pressed['Space'] || (perf.mobile && touch.fire)) shootPlayer();
+    if (input.mouse.rightPressed || input.pressed['KeyF']) useGuard();
+    if (input.pressed['KeyR']) usePulse();
+    if (input.pressed['KeyE']) interact();
+    if (input.pressed['Tab']) toggleMap();
+    if (input.pressed['Escape']) togglePause();
+
+    revealCells(p.x, p.y, 240);
+    tryCollects();
+
+    let nearbyPressure = 0;
+    for (const e of game.enemies) if (e.alive && distXY(e.x, e.y, p.x, p.y) < 180) nearbyPressure += 1;
+    if (nearbyPressure) p.static = clamp(p.static + nearbyPressure * dt * 2.8, 0, 100);
+  }
+
+  function updateBreath(dt) {
+    if (!game || game.scene !== 'breath' || !game.breathChallenge) return;
+    const c = game.breathChallenge;
+    c.time -= dt;
+    c.angle += c.speed * dt;
+    refs.breathTime.textContent = Math.max(0, c.time).toFixed(1) + 's';
+    if (input.pressed['Space'] || input.mouse.leftPressed) resolveBreathTap();
+    if (c.time <= 0) {
+      hideAllScreens();
+      game.scene = 'playing';
+      game.breathChallenge = null;
+      showToast('Calibration incomplete. Try again when ready.', 2.1);
+      logEvent('breath_challenge_fail');
+    }
+  }
+
+  function updateTriage(dt) {
+    if (!game || game.scene !== 'triage' || !game.triageChallenge) return;
+    const tc = game.triageChallenge;
+    tc.time -= dt;
+    refs.triageTime.textContent = Math.max(0, tc.time).toFixed(1) + 's';
+    refs.triageCount.textContent = tc.idx + ' / ' + tc.deck.length;
+    refs.triageCorrect.textContent = tc.correct;
+    if (input.pressed['Digit1']) resolveTriageChoice('urgent');
+    if (input.pressed['Digit2']) resolveTriageChoice('soon');
+    if (input.pressed['Digit3']) resolveTriageChoice('noise');
+    if (tc.time <= 0) finishDispatchChallenge();
+  }
+
+  function updateAmbient(dt) {
+    if (!game) return;
+    for (const boat of game.boats) {
+      boat.y += boat.speed * boat.dir * dt;
+      if (boat.y > boat.maxY || boat.y < boat.minY) boat.dir *= -1;
+      boat.sway += dt;
+    }
+    if (game.player.static > 74 && game.supportPulse <= 0) {
+      game.supportPulse = 10;
+      const hidden = game.pickups.find(p => p.kind === 'cache' && !p.taken);
+      if (hidden) hidden.revealed = true;
+    }
+    if (game.supportPulse > 0) game.supportPulse -= dt;
+  }
+
+  function updateParticles(dt) {
+    for (const p of game.particles) {
+      p.age += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
+    game.particles = game.particles.filter(p => p.age < p.life);
+    game.pickups = game.pickups.filter(p => !(p.kind === 'lumen' && p.taken));
+    if (game.particles.length > perf.particleCap) game.particles.splice(0, game.particles.length - perf.particleCap);
+    game.bullets = game.bullets.filter(b => b.alive);
+    game.enemyBullets = game.enemyBullets.filter(b => b.alive);
+    game.enemies = game.enemies.filter(e => e.alive);
+  }
+
+  function updateGame(dt) {
+    if (!game) return;
+    game.time += dt;
+    updateAmbient(dt);
+    if (toastTimer > 0) {
+      toastTimer -= dt;
+      if (toastTimer <= 0) refs.toast.classList.remove('show');
+    }
+    if (game.scene === 'playing') {
+      updateAdaptiveBand(dt);
+      updatePlayer(dt);
+      updateBullets(game.bullets, dt, false);
+      updateBullets(game.enemyBullets, dt, true);
+      for (const e of game.enemies) updateEnemy(e, dt);
+      maybeSpawnBoss();
+      updateParticles(dt);
+      const p = game.player;
+      game.cam.x = clamp(lerp(game.cam.x, p.x - view.w * 0.5, 0.12), 0, WORLD.w - view.w);
+      game.cam.y = clamp(lerp(game.cam.y, p.y - view.h * 0.5, 0.12), 0, WORLD.h - view.h);
+      game.cam.shake = Math.max(0, game.cam.shake - dt * 16);
+    } else if (game.scene === 'breath') {
+      updateBreath(dt);
+    } else if (game.scene === 'triage') {
+      updateTriage(dt);
+    } else if (game.scene === 'debrief') {
+      if (toastTimer > 0) {
+        toastTimer -= dt;
+        if (toastTimer <= 0) refs.toast.classList.remove('show');
+      }
+    } else {
+      if (toastTimer > 0) {
+        toastTimer -= dt;
+        if (toastTimer <= 0) refs.toast.classList.remove('show');
+      }
+    }
+  }
+
+  function drawFloorPatch(f) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    if (f.kind === 'ground') ctx.fillStyle = patterns.ground;
+    if (f.kind === 'dock') ctx.fillStyle = patterns.dock;
+    if (f.kind === 'yard') ctx.fillStyle = patterns.yard;
+    if (f.kind === 'market') ctx.fillStyle = patterns.market;
+    ctx.fillRect(f.x, f.y, f.w, f.h);
+    if (f.kind === 'dock') {
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      for (let x = f.x + 20; x < f.x + f.w; x += 60) {
+        ctx.beginPath(); ctx.moveTo(x, f.y); ctx.lineTo(x, f.y + f.h); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawWater(w) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const grad = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
+    grad.addColorStop(0, '#34554f');
+    grad.addColorStop(1, '#213a38');
+    ctx.fillStyle = grad;
+    drawRoundRect(ctx, w.x, w.y, w.w, w.h, 20, true, false);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 12; i++) {
+      const yy = w.y + ((i * 28 + game.time * 14) % (w.h + 30));
+      ctx.beginPath();
+      for (let x = w.x; x <= w.x + w.w; x += 20) {
+        const wy = yy + Math.sin(x * 0.04 + game.time * 2.1 + i) * 4;
+        if (x === w.x) ctx.moveTo(x, wy); else ctx.lineTo(x, wy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawBuilding(b) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    drawRoundRect(ctx, b.x + 16, b.y + 18, b.w, b.h, 18, true, false);
+    if (b.kind === 'container') {
+      ctx.fillStyle = shade(b.color, -0.18);
+      drawRoundRect(ctx, b.x + 6, b.y + 6, b.w, b.h, 10, true, false);
+      ctx.fillStyle = b.color;
+      drawRoundRect(ctx, b.x, b.y, b.w, b.h, 8, true, false);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeRect(b.x + 10, b.y + 10, b.w - 20, b.h - 20);
+    } else if (b.kind === 'crate') {
+      ctx.fillStyle = shade(b.color, -0.16);
+      drawRoundRect(ctx, b.x + 5, b.y + 5, b.w, b.h, 8, true, false);
+      ctx.fillStyle = b.color;
+      drawRoundRect(ctx, b.x, b.y, b.w, b.h, 8, true, false);
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+      ctx.beginPath(); ctx.moveTo(b.x + 8, b.y + 8); ctx.lineTo(b.x + b.w - 8, b.y + b.h - 8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(b.x + b.w - 8, b.y + 8); ctx.lineTo(b.x + 8, b.y + b.h - 8); ctx.stroke();
+    } else if (b.kind === 'barrier') {
+      ctx.fillStyle = shade(b.color, -0.18);
+      drawRoundRect(ctx, b.x + 6, b.y + 6, b.w, b.h, 10, true, false);
+      ctx.fillStyle = b.color;
+      drawRoundRect(ctx, b.x, b.y, b.w, b.h, 10, true, false);
+      ctx.strokeStyle = 'rgba(255,240,220,0.12)';
+      ctx.strokeRect(b.x + 10, b.y + 10, b.w - 20, b.h - 20);
+    } else {
+      ctx.fillStyle = shade(b.color, -0.22);
+      drawRoundRect(ctx, b.x + 10, b.y + 10, b.w, b.h, 18, true, false);
+      ctx.fillStyle = b.color;
+      drawRoundRect(ctx, b.x, b.y, b.w, b.h, 18, true, false);
+      ctx.fillStyle = b.roof || shade(b.color, 0.1);
+      drawRoundRect(ctx, b.x + 8, b.y + 8, b.w - 16, b.h - 16, 14, true, false);
+      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+      for (let x = b.x + 28; x < b.x + b.w - 20; x += 30) { ctx.beginPath(); ctx.moveTo(x, b.y + 20); ctx.lineTo(x, b.y + b.h - 18); ctx.stroke(); }
+      if (b.label) {
+        ctx.fillStyle = 'rgba(20,12,9,0.82)';
+        drawRoundRect(ctx, b.x + 14, b.y + 14, Math.min(130, b.w - 30), 30, 10, true, false);
+        ctx.fillStyle = '#ead8bc';
+        ctx.font = '12px Trebuchet MS, Segoe UI, sans-serif';
+        ctx.fillText(b.label, b.x + 24, b.y + 34);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawSignalNode(node, color) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const pulse = Math.sin(game.time * 2.2) * 0.5 + 0.5;
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(node.x + 6, node.y + 10, node.r * 0.8, node.r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shade(color, -0.2);
+    ctx.beginPath(); ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(node.x, node.y, node.r - 6, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.12 + pulse * 0.1) + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(node.x, node.y, node.r + 6 + pulse * 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#f3e8d4';
+    ctx.font = '13px Georgia, serif';
+    ctx.fillText(node.label, node.x - node.r - 8, node.y - node.r - 14);
+    ctx.restore();
+  }
+
+  function drawPickup(p) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    if (p.kind === 'cache') {
+      const glow = 0.35 + Math.sin(game.time * 2 + p.x) * 0.08;
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.beginPath(); ctx.ellipse(p.x + 3, p.y + 8, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#6f604c';
+      drawRoundRect(ctx, p.x - 16, p.y - 16, 32, 32, 8, true, false);
+      ctx.strokeStyle = 'rgba(237,215,174,' + glow + ')';
+      ctx.strokeRect(p.x - 20, p.y - 20, 40, 40);
+      if (p.revealed) {
+        ctx.fillStyle = 'rgba(237,215,174,0.15)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 34, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (p.kind === 'lumen') {
+      const bob = Math.sin(game.time * 5 + p.x) * 3;
+      ctx.fillStyle = 'rgba(235,210,160,0.18)';
+      ctx.beginPath(); ctx.arc(p.x, p.y + bob, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#efd9ab';
+      ctx.beginPath(); ctx.arc(p.x, p.y + bob, 5.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawAnchor(a) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const pulse = 0.45 + Math.sin(game.time * 3 + a.x) * 0.2;
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath(); ctx.ellipse(a.x + 4, a.y + 7, 18, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(230,214,186,' + (0.2 + pulse * 0.2) + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(a.x, a.y, 22 + pulse * 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#ead8bc';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y - 14);
+    ctx.lineTo(a.x, a.y + 16);
+    ctx.moveTo(a.x - 10, a.y + 8);
+    ctx.lineTo(a.x, a.y + 16);
+    ctx.lineTo(a.x + 10, a.y + 8);
+    ctx.moveTo(a.x - 7, a.y - 8);
+    ctx.arc(a.x, a.y - 8, 7, Math.PI, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBoat(b) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const bob = Math.sin(game.time * 2 + b.sway) * 2;
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.ellipse(b.x + 4, b.y + 8, b.w * 0.55, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shade(b.color, -0.18);
+    drawRoundRect(ctx, b.x - b.w * 0.5 + 3, b.y - b.h * 0.5 + 4 + bob, b.w, b.h, 10, true, false);
+    ctx.fillStyle = b.color;
+    drawRoundRect(ctx, b.x - b.w * 0.5, b.y - b.h * 0.5 + bob, b.w, b.h, 10, true, false);
+    ctx.fillStyle = '#e8d6be';
+    ctx.fillRect(b.x - 2, b.y - b.h * 0.5 - 12 + bob, 4, 14);
+    ctx.beginPath();
+    ctx.moveTo(b.x + 2, b.y - b.h * 0.5 - 10 + bob);
+    ctx.lineTo(b.x + 16, b.y - b.h * 0.5 - 2 + bob);
+    ctx.lineTo(b.x + 2, b.y + bob);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSupportPost(post) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const glow = post.used ? 0.05 : 0.18 + Math.sin(game.time * 2 + post.x * 0.01) * 0.06;
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.ellipse(post.x + 4, post.y + 8, 18, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = post.used ? '#5a4f48' : '#6e5f52';
+    drawRoundRect(ctx, post.x - 12, post.y - 12, 24, 24, 8, true, false);
+    ctx.fillStyle = post.used ? '#8f8274' : '#d7c49d';
+    ctx.beginPath(); ctx.arc(post.x, post.y - 16, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(215,196,157,' + glow + ')';
+    ctx.beginPath(); ctx.arc(post.x, post.y - 6, 30, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBench(bench) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const glow = bench.used ? 0.05 : 0.16 + Math.sin(game.time * 2 + bench.x) * 0.04;
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.ellipse(bench.x + 4, bench.y + 7, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = bench.used ? '#5a4d42' : '#6e5a4c';
+    drawRoundRect(ctx, bench.x - 18, bench.y - 10, 36, 20, 8, true, false);
+    ctx.fillStyle = bench.used ? '#7a6b5f' : '#d7bf94';
+    ctx.beginPath(); ctx.arc(bench.x + 16, bench.y - 12, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(237,215,174,' + glow + ')';
+    ctx.beginPath(); ctx.arc(bench.x, bench.y, 30, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawActor(e) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.20)';
+    ctx.beginPath(); ctx.ellipse(e.x + 4, e.y + 10, e.r * 0.95, e.r * 0.58, 0, 0, Math.PI * 2); ctx.fill();
+    if (e.kind === 'drifter') {
+      ctx.fillStyle = e.flash > 0 ? '#f2dfc2' : e.color;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(20,12,9,0.28)';
+      ctx.beginPath(); ctx.arc(e.x - 4, e.y - 3, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x + 5, e.y + 1, 3, 0, Math.PI * 2); ctx.fill();
+    } else if (e.kind === 'hound') {
+      ctx.fillStyle = e.flash > 0 ? '#e9ede8' : e.color;
+      drawRoundRect(ctx, e.x - 18, e.y - 12, 36, 24, 12, true, false);
+      ctx.fillStyle = shade(e.color, -0.18);
+      ctx.beginPath(); ctx.arc(e.x + 12, e.y - 2, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath(); ctx.moveTo(e.x - 16, e.y + 10); ctx.lineTo(e.x + 16, e.y + 10); ctx.stroke();
+    } else if (e.kind === 'buoy') {
+      ctx.fillStyle = e.flash > 0 ? '#f0e1d7' : shade(e.color, -0.16);
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = e.color;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r - 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f6d3a0';
+      ctx.beginPath(); ctx.arc(e.x, e.y - 5, 5, 0, Math.PI * 2); ctx.fill();
+    } else if (e.kind === 'boss') {
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.beginPath(); ctx.ellipse(e.x + 8, e.y + 12, 42, 22, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = e.flash > 0 ? '#ffe2ce' : shade(e.color, -0.18);
+      drawRoundRect(ctx, e.x - 30, e.y - 28, 60, 56, 20, true, false);
+      ctx.fillStyle = e.color;
+      drawRoundRect(ctx, e.x - 24, e.y - 22, 48, 44, 16, true, false);
+      ctx.fillStyle = '#f4c98c';
+      ctx.beginPath(); ctx.arc(e.x, e.y - 8, 10, 0, Math.PI * 2); ctx.fill();
+      if (e.shielded) {
+        ctx.strokeStyle = 'rgba(238,217,183,0.42)';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(e.x, e.y, 48 + Math.sin(game.time * 4) * 3, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    if (e.kind === 'boss' || e.kind === 'hound' || e.kind === 'drifter' || e.kind === 'buoy') {
+      const w = e.r * 1.8;
+      ctx.fillStyle = 'rgba(0,0,0,0.36)';
+      ctx.fillRect(e.x - w * 0.5, e.y - e.r - 18, w, 6);
+      ctx.fillStyle = '#a5b88e';
+      ctx.fillRect(e.x - w * 0.5, e.y - e.r - 18, w * (e.hp / e.maxHp), 6);
+    }
+    ctx.restore();
+  }
+
+  function drawPlayer(p) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.24)';
+    ctx.beginPath(); ctx.ellipse(p.x + 5, p.y + 10, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d7c1a1';
+    ctx.beginPath(); ctx.arc(p.x, p.y - 2, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.angle);
+    ctx.fillStyle = p.invuln > 0 ? '#efe3d6' : '#6f8a86';
+    ctx.beginPath();
+    ctx.moveTo(20, 0);
+    ctx.lineTo(-12, -12);
+    ctx.quadraticCurveTo(-20, 0, -12, 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#c69a5c';
+    ctx.beginPath(); ctx.arc(10, 0, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    if (p.guardTimer > 0) {
+      const prog = 1 - p.guardTimer / p.guardDuration;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(236,216,184,0.65)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 32, -1.2, -1.2 + Math.PI * 2 * prog); ctx.stroke();
+      ctx.strokeStyle = 'rgba(165,184,142,0.92)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 32, 0.3, 1.15); ctx.stroke();
+    }
+    if (p.pulseWaveRadius > 0) {
+      ctx.strokeStyle = 'rgba(215,204,176,' + (p.pulseWave / 0.7 * 0.5) + ')';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.pulseWaveRadius, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawProjectiles(list, color) {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    for (const b of list) {
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.r || 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    for (const p of game.particles) {
+      const alpha = 1 - p.age / p.life;
+      ctx.fillStyle = p.color.replace(')', ',' + alpha + ')').replace('rgb', 'rgba');
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size || 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFog() {
+    ctx.save();
+    ctx.translate(-game.cam.x, -game.cam.y);
+    const cell = WORLD.cell;
+    ctx.fillStyle = 'rgba(13,9,7,0.58)';
+    for (let y = 0; y < WORLD.rows; y++) {
+      for (let x = 0; x < WORLD.cols; x++) {
+        if (!game.discovered[y][x]) ctx.fillRect(x * cell, y * cell, cell, cell);
+      }
+    }
+    ctx.restore();
+    const grad = ctx.createRadialGradient(view.w * 0.5, view.h * 0.5, Math.min(view.w, view.h) * 0.2, view.w * 0.5, view.h * 0.5, Math.max(view.w, view.h) * 0.75);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, view.w, view.h);
+  }
+
+  function drawStaticOverlay() {
+    if (!game) return;
+    const level = clamp((game.player.static - 58) / 42, 0, 1);
+    if (level <= 0) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(48,33,24,' + (0.06 + level * 0.08) + ')';
+    ctx.fillRect(0, 0, view.w, view.h);
+    ctx.strokeStyle = 'rgba(240,224,198,' + (0.05 + level * 0.08) + ')';
+    ctx.lineWidth = 1;
+    const lines = Math.floor((perf.mobile ? 5 : 10) + level * (perf.mobile ? 8 : 14));
+    for (let i = 0; i < lines; i++) {
+      const y = ((game.time * 90 + i * 37) % (view.h + 40)) - 20;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(view.w, y + Math.sin(i + game.time * 3) * 6);
+      ctx.stroke();
+    }
+    const vignette = ctx.createRadialGradient(view.w * 0.5, view.h * 0.5, Math.min(view.w, view.h) * 0.12, view.w * 0.5, view.h * 0.5, Math.max(view.w, view.h) * 0.72);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,' + (0.10 + level * 0.12) + ')');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, view.w, view.h);
+    ctx.restore();
+  }
+
+  function areaForPlayer() {
+    if (!game) return 'Harbor of Drift';
+    const p = game.player;
+    for (const area of areaDefs) if (pointInRect(p.x, p.y, area.rect)) return area.name;
+    return 'Harbor of Drift';
+  }
+
+  function objectiveText() {
+    if (!game) return 'Restore the Tidal Relay.';
+    if (!game.contracts.relay1) return livingEnemiesInZone('tide') > 0 ? 'Clear the Tide Office yard.' : 'Restore the Tidal Relay.';
+    if (!game.contracts.anchors) return game.anchorsCollected < 3 ? 'Use Grounding Pulse to reveal and recover 3 anchors.' : 'Restore the Anchor Net.';
+    if (!game.contracts.dispatch) return livingEnemiesInZone('dispatch') > 0 ? 'Clear Dispatch House.' : 'Restore the Dispatch Board by sorting signals.';
+    if (!game.contracts.ledger) return livingEnemiesInZone('ledger') > 0 ? 'Clear the Ledger House.' : 'Repair the Ledger Relay.';
+    if (!game.contracts.boss) return 'Defeat the Warden of Rush at the beacon tower.';
+    return 'District restored.';
+  }
+
+  function updateHud() {
+    if (!game) return;
+    refs.areaName.textContent = areaForPlayer();
+    refs.objectiveText.textContent = objectiveText();
+    refs.scoreText.textContent = Math.round(game.score);
+    refs.lumenText.textContent = game.lumen;
+    refs.restorationText.textContent = Math.round(game.restoration) + '%';
+    refs.healthBar.style.width = (game.player.health / game.player.maxHealth * 100).toFixed(1) + '%';
+    refs.focusBar.style.width = (game.player.focus / game.player.maxFocus * 100).toFixed(1) + '%';
+    refs.staticBar.style.width = clamp(game.player.static, 0, 100).toFixed(1) + '%';
+    refs.perfectText.textContent = game.breathPerfects;
+    refs.anchorText.textContent = game.anchorsCollected + ' / 3';
+    refs.supportText.textContent = game.supportLinks || 0;
+    refs.bandText.textContent = game.pressureBand || 'steady';
+    refs.contractText.textContent = game.contractsDone + ' / 4';
+    refs.guardCdText.textContent = game.player.guardCd > 0 ? game.player.guardCd.toFixed(1) + 's' : 'ready';
+    refs.pulseCdText.textContent = game.player.pulseCd > 0 ? game.player.pulseCd.toFixed(1) + 's' : 'ready';
+    refs.dashCdText.textContent = game.player.dashCd > 0 ? game.player.dashCd.toFixed(1) + 's' : 'ready';
+    refs.triageCdText.textContent = game.contracts.dispatch ? 'clear' : game.contracts.anchors ? 'available' : 'locked';
+    if (touchRefs.status) touchRefs.status.textContent = 'Fire auto-aims · Guard ' + (game.player.guardCd > 0 ? game.player.guardCd.toFixed(1) + 's' : 'ready') + ' · Pulse ' + (game.player.pulseCd > 0 ? game.player.pulseCd.toFixed(1) + 's' : 'ready') + ' · Dash ' + (game.player.dashCd > 0 ? game.player.dashCd.toFixed(1) + 's' : 'ready');
+    syncTouchHudVisibility();
+  }
+
+  function drawMap(gctx, w, h, full) {
+    if (!game) return;
+    gctx.clearRect(0, 0, w, h);
+    gctx.fillStyle = '#221813';
+    drawRoundRect(gctx, 0, 0, w, h, 18, true, false);
+    gctx.save();
+    const pad = full ? 26 : 10;
+    const mapX = pad;
+    const mapY = pad;
+    const mapW = w - pad * 2;
+    const mapH = h - pad * 2;
+    const sx = mapW / WORLD.w;
+    const sy = mapH / WORLD.h;
+    gctx.fillStyle = '#584737';
+    gctx.fillRect(mapX, mapY, mapW, mapH);
+    gctx.fillStyle = '#2b4543';
+    game.waters.forEach(wa => gctx.fillRect(mapX + wa.x * sx, mapY + wa.y * sy, wa.w * sx, wa.h * sy));
+    gctx.fillStyle = 'rgba(236,216,184,0.12)';
+    for (let y = 0; y < WORLD.rows; y++) {
+      for (let x = 0; x < WORLD.cols; x++) {
+        if (game.discovered[y][x]) gctx.fillRect(mapX + x * WORLD.cell * sx, mapY + y * WORLD.cell * sy, WORLD.cell * sx, WORLD.cell * sy);
+      }
+    }
+    gctx.fillStyle = '#8e7157';
+    game.obstacles.forEach(ob => {
+      if (ob.kind === 'water' || ob.kind === 'barrier' && !ob.solid) return;
+      gctx.fillRect(mapX + ob.x * sx, mapY + ob.y * sy, ob.w * sx, ob.h * sy);
+    });
+    const markers = [
+      { n: game.relay1, color: game.relay1.restored ? '#a5b88e' : '#ecd0a2' },
+      { n: game.anchorNet, color: game.anchorNet.restored ? '#a5b88e' : '#ecd0a2' },
+      { n: game.dispatchRelay, color: game.dispatchRelay.restored ? '#a5b88e' : '#a8c1bc' },
+      { n: game.ledgerRelay, color: game.ledgerRelay.restored ? '#a5b88e' : '#ecd0a2' }
+    ];
+    markers.forEach(m => {
+      gctx.fillStyle = m.color;
+      gctx.beginPath(); gctx.arc(mapX + m.n.x * sx, mapY + m.n.y * sy, full ? 7 : 4, 0, Math.PI * 2); gctx.fill();
+    });
+    gctx.fillStyle = '#7f988f';
+    game.supportPosts.filter(p => !p.used).forEach(post => {
+      gctx.beginPath();
+      gctx.arc(mapX + post.x * sx, mapY + post.y * sy, full ? 5 : 3, 0, Math.PI * 2);
+      gctx.fill();
+    });
+    if (game.boss && game.boss.alive) {
+      gctx.fillStyle = '#c86b58';
+      gctx.beginPath(); gctx.arc(mapX + game.boss.x * sx, mapY + game.boss.y * sy, full ? 8 : 5, 0, Math.PI * 2); gctx.fill();
+    }
+    gctx.fillStyle = '#f0e7d9';
+    gctx.beginPath(); gctx.arc(mapX + game.player.x * sx, mapY + game.player.y * sy, full ? 6 : 4, 0, Math.PI * 2); gctx.fill();
+    gctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    gctx.strokeRect(mapX, mapY, mapW, mapH);
+    gctx.restore();
+    if (full) {
+      gctx.fillStyle = '#e8d6be';
+      gctx.font = '14px Trebuchet MS, Segoe UI, sans-serif';
+      gctx.fillText('You', 54, 34);
+      gctx.fillStyle = '#f0e7d9'; gctx.beginPath(); gctx.arc(28, 30, 7, 0, Math.PI * 2); gctx.fill();
+      gctx.fillStyle = '#ecd0a2'; gctx.beginPath(); gctx.arc(148, 30, 7, 0, Math.PI * 2); gctx.fill(); gctx.fillStyle = '#e8d6be'; gctx.fillText('Contract', 166, 34);
+      gctx.fillStyle = '#c86b58'; gctx.beginPath(); gctx.arc(270, 30, 7, 0, Math.PI * 2); gctx.fill(); gctx.fillStyle = '#e8d6be'; gctx.fillText('Boss', 288, 34);
+      gctx.fillStyle = '#7f988f'; gctx.beginPath(); gctx.arc(364, 30, 7, 0, Math.PI * 2); gctx.fill(); gctx.fillStyle = '#e8d6be'; gctx.fillText('Support', 382, 34);
+    }
+  }
+
+  function renderBreathCanvas() {
+    breathCtx.clearRect(0, 0, breathCanvas.width, breathCanvas.height);
+    if (!game || game.scene !== 'breath' || !game.breathChallenge) return;
+    const c = game.breathChallenge;
+    const cx = breathCanvas.width / 2;
+    const cy = breathCanvas.height / 2;
+    const r = 116;
+    breathCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+    breathCtx.lineWidth = 18;
+    breathCtx.beginPath(); breathCtx.arc(cx, cy, r, 0, Math.PI * 2); breathCtx.stroke();
+    breathCtx.strokeStyle = '#d5bf91';
+    breathCtx.beginPath(); breathCtx.arc(cx, cy, r, -0.45, 0.32); breathCtx.stroke();
+    breathCtx.strokeStyle = 'rgba(165,184,142,0.9)';
+    breathCtx.lineWidth = 6;
+    breathCtx.beginPath(); breathCtx.arc(cx, cy, r + 26, -0.45, 0.32); breathCtx.stroke();
+    const mx = cx + Math.cos(c.angle) * r;
+    const my = cy + Math.sin(c.angle) * r;
+    breathCtx.fillStyle = '#f3e8d4';
+    breathCtx.beginPath(); breathCtx.arc(mx, my, 11, 0, Math.PI * 2); breathCtx.fill();
+    breathCtx.fillStyle = '#d0c0a8';
+    breathCtx.font = '15px Trebuchet MS';
+    breathCtx.fillText('Steady exhale arc', cx - 52, cy - r - 38);
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, view.w, view.h);
+    if (!game) {
+      ctx.fillStyle = '#1b1410';
+      ctx.fillRect(0, 0, view.w, view.h);
+      // background illustration under title
+      ctx.save();
+      const t = performance.now() * 0.001;
+      const sky = ctx.createLinearGradient(0, 0, 0, view.h);
+      sky.addColorStop(0, '#5d4938');
+      sky.addColorStop(1, '#261912');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, view.w, view.h);
+      ctx.fillStyle = 'rgba(255,228,190,0.06)';
+      for (let i = 0; i < 18; i++) {
+        const x = (i * 130 + Math.sin(t * 0.3 + i) * 40) % (view.w + 100) - 50;
+        ctx.fillRect(x, view.h * 0.56, 90, view.h * 0.4);
+      }
+      ctx.fillStyle = '#2e4b47';
+      ctx.fillRect(0, view.h * 0.72, view.w, view.h * 0.28);
+      ctx.restore();
+      return;
+    }
+    const shakeX = (Math.random() - 0.5) * game.cam.shake;
+    const shakeY = (Math.random() - 0.5) * game.cam.shake;
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, view.h);
+    bgGrad.addColorStop(0, '#745b48');
+    bgGrad.addColorStop(0.5, '#5b493b');
+    bgGrad.addColorStop(1, '#2a1d16');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, view.w, view.h);
+
+    for (const floor of game.floors) drawFloorPatch(floor);
+    for (const w of game.waters) drawWater(w);
+    game.boats.forEach(drawBoat);
+    const drawables = game.obstacles.filter(ob => ob.kind !== 'water').sort((a, b) => (a.y + a.h) - (b.y + b.h));
+    drawables.forEach(drawBuilding);
+
+    game.pickups.filter(p => !p.taken).forEach(drawPickup);
+    game.hiddenAnchors.filter(a => a.revealed && !a.collected).forEach(drawAnchor);
+
+    if (game.relay1 && !game.relay1.restored) drawSignalNode(game.relay1, '#d7c09a');
+    if (game.anchorNet && !game.anchorNet.restored) drawSignalNode(game.anchorNet, '#b2c0ad');
+    if (game.dispatchRelay && !game.dispatchRelay.restored && game.contracts.anchors) drawSignalNode(game.dispatchRelay, '#a8c1bc');
+    if (game.ledgerRelay && !game.ledgerRelay.restored && game.contracts.dispatch) drawSignalNode(game.ledgerRelay, '#d6ba98');
+    if (game.workshop && !game.workshop.used && game.contracts.relay1) drawSignalNode(game.workshop, '#7f988f');
+    game.supportPosts.forEach(drawSupportPost);
+    game.benches.forEach(drawBench);
+
+    drawProjectiles(game.enemyBullets, '#d6a47d');
+    drawProjectiles(game.bullets, '#f0e7d9');
+    game.enemies.sort((a, b) => a.y - b.y).forEach(drawActor);
+    drawPlayer(game.player);
+    drawParticles();
+    drawFog();
+
+    // interaction hints
+    const p = game.player;
+    ctx.fillStyle = '#f0e7d9';
+    ctx.font = '15px Trebuchet MS, Segoe UI, sans-serif';
+    function drawHint(x, y, text) {
+      const sx = x - game.cam.x;
+      const sy = y - game.cam.y;
+      if (sx < -100 || sy < -40 || sx > view.w + 100 || sy > view.h + 100) return;
+      ctx.fillStyle = 'rgba(31,21,16,0.9)';
+      const w = ctx.measureText(text).width + 18;
+      drawRoundRect(ctx, sx - w / 2, sy - 56, w, 28, 10, true, false);
+      ctx.fillStyle = '#f0e7d9';
+      ctx.fillText(text, sx - w / 2 + 9, sy - 37);
+    }
+    if (!game.contracts.relay1 && distXY(p.x, p.y, game.relay1.x, game.relay1.y) < 70) drawHint(game.relay1.x, game.relay1.y, 'Press E to restore');
+    if (!game.contracts.anchors && distXY(p.x, p.y, game.anchorNet.x, game.anchorNet.y) < 70) drawHint(game.anchorNet.x, game.anchorNet.y, 'Press E to restore');
+    if (game.contracts.anchors && !game.contracts.dispatch && distXY(p.x, p.y, game.dispatchRelay.x, game.dispatchRelay.y) < 70) drawHint(game.dispatchRelay.x, game.dispatchRelay.y, 'Press E to sort signals');
+    if (game.contracts.dispatch && !game.contracts.ledger && distXY(p.x, p.y, game.ledgerRelay.x, game.ledgerRelay.y) < 70) drawHint(game.ledgerRelay.x, game.ledgerRelay.y, 'Press E to repair');
+    if (!game.workshop.used && game.contracts.relay1 && distXY(p.x, p.y, game.workshop.x, game.workshop.y) < 60) drawHint(game.workshop.x, game.workshop.y, 'Press E for upgrade');
+    for (const post of game.supportPosts) if (!post.used && distXY(p.x, p.y, post.x, post.y) < 60) drawHint(post.x, post.y, 'Press E for crew radio');
+    for (const bench of game.benches) if (!bench.used && distXY(p.x, p.y, bench.x, bench.y) < 60) drawHint(bench.x, bench.y, 'Press E to take a harbor pause');
+
+    ctx.restore();
+    drawStaticOverlay();
+    frameCounter += 1;
+    if (frameCounter % perf.miniMapEvery === 0 || screens.map.classList.contains('active')) drawMap(miniMapCtx, miniMapCanvas.width, miniMapCanvas.height, false);
+    if (screens.map.classList.contains('active')) drawMap(fullMapCtx, fullMapCanvas.width, fullMapCanvas.height, true);
+    if (game.scene === 'breath') renderBreathCanvas();
+  }
+
+  function togglePause() {
+    if (!game) return;
+    if (game.scene === 'playing') {
+      game.scene = 'pause';
+      hideAllScreens();
+      screens.pause.classList.add('active');
+    } else if (game.scene === 'pause') {
+      hideAllScreens();
+      game.scene = 'playing';
+    }
+  }
+
+  function toggleMap() {
+    if (!game) return;
+    if (game.scene === 'playing' || game.scene === 'pause') {
+      const active = screens.map.classList.contains('active');
+      hideAllScreens();
+      if (active) {
+        game.scene = 'playing';
+      } else {
+        game.scene = 'map';
+        screens.map.classList.add('active');
+        drawMap(fullMapCtx, fullMapCanvas.width, fullMapCanvas.height, true);
+      }
+    } else if (game.scene === 'map') {
+      hideAllScreens();
+      game.scene = 'playing';
+    }
+  }
+
+  function loop(ts) {
+    const dt = Math.min(0.033, (ts - lastTime) / 1000 || 0.016);
+    lastTime = ts;
+    updateGame(dt);
+    render();
+    updateHud();
+    input.clearFrame();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function onKeyDown(e) {
+    if (!input.keys[e.code]) input.pressed[e.code] = true;
+    input.keys[e.code] = true;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab', 'Digit1', 'Digit2', 'Digit3'].includes(e.code)) e.preventDefault();
+    if (game && game.scene === 'breath' && e.code === 'Escape') {
+      game.scene = 'playing';
+      game.breathChallenge = null;
+      hideAllScreens();
+    }
+  }
+  function onKeyUp(e) { input.keys[e.code] = false; }
+  window.addEventListener('keydown', onKeyDown, { passive: false });
+  window.addEventListener('keyup', onKeyUp);
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    input.mouse.x = e.clientX - rect.left;
+    input.mouse.y = e.clientY - rect.top;
+    input.mouse.moved = true;
+  });
+  canvas.addEventListener('mousedown', e => {
+    if (e.button === 0) { input.mouse.left = true; input.mouse.leftPressed = true; }
+    if (e.button === 2) { input.mouse.right = true; input.mouse.rightPressed = true; }
+  });
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0) input.mouse.left = false;
+    if (e.button === 2) input.mouse.right = false;
+  });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('howBtn').addEventListener('click', () => { hideAllScreens(); screens.how.classList.add('active'); });
+  document.getElementById('researchBtn').addEventListener('click', () => { hideAllScreens(); screens.research.classList.add('active'); });
+
+  const briefingNotes = {
+    low: 'Low load starts with a quieter baseline.',
+    medium: 'Medium load starts balanced.',
+    high: 'High load starts with more Static on the meter and makes support checkpoints more relevant.'
+  };
+  const supportNotes = {
+    warm: 'Warm support gives fuller crew-radio prompts.',
+    direct: 'Direct support keeps the radio short and task-focused.',
+    quiet: 'Quiet support trims the prompts down to minimal cues.'
+  };
+  const goalNotes = {
+    settle: 'Settle focus strengthens Guard timing and downshifts reactivity.',
+    sort: 'Sort focus helps with prioritization tasks and aim support.',
+    recover: 'Recover focus strengthens Pulse and rest points.'
+  };
+
+  function renderBriefingNote() {
+    const note = document.getElementById('briefingNote');
+    if (!note) return;
+    note.textContent = briefingNotes[selectedLoadBand] + ' ' + supportNotes[selectedSupportStyle] + ' ' + goalNotes[selectedGoalFocus];
+  }
+
+  const routeDescriptions = {
+    standard: 'Standard route keeps the district balanced. Steady route widens the guard window and eases pressure. Storm route is harder and scores a little higher.',
+    steady: 'Steady route is for calmer recovery practice. Breath Guard lasts longer, pulse returns faster, and enemy pressure eases a little.',
+    storm: 'Storm route sharpens the edge. Enemies move faster, the boss hits harder, and the scoring multiplier nudges upward.'
+  };
+  document.querySelectorAll('.routeBtn[data-route]').forEach(btn => btn.addEventListener('click', () => {
+    selectedRouteStyle = btn.getAttribute('data-route');
+    document.querySelectorAll('.routeBtn[data-route]').forEach(other => other.classList.toggle('active', other === btn));
+    const note = document.getElementById('routeStyleText');
+    if (note) note.textContent = routeDescriptions[selectedRouteStyle];
+  }));
+  document.querySelectorAll('.briefingBtn[data-load]').forEach(btn => btn.addEventListener('click', () => {
+    selectedLoadBand = btn.getAttribute('data-load');
+    document.querySelectorAll('.briefingBtn[data-load]').forEach(other => other.classList.toggle('active', other === btn));
+    renderBriefingNote();
+  }));
+  document.querySelectorAll('.briefingBtn[data-support]').forEach(btn => btn.addEventListener('click', () => {
+    selectedSupportStyle = btn.getAttribute('data-support');
+    document.querySelectorAll('.briefingBtn[data-support]').forEach(other => other.classList.toggle('active', other === btn));
+    renderBriefingNote();
+  }));
+  document.querySelectorAll('.briefingBtn[data-goal]').forEach(btn => btn.addEventListener('click', () => {
+    selectedGoalFocus = btn.getAttribute('data-goal');
+    document.querySelectorAll('.briefingBtn[data-goal]').forEach(other => other.classList.toggle('active', other === btn));
+    renderBriefingNote();
+  }));
+  renderBriefingNote();
+  document.querySelectorAll('.closeBtn').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-close');
+    if (id === 'mapScreen' && game) game.scene = 'playing';
+    hideAllScreens();
+    if (!game) screens.title.classList.add('active');
+  }));
+  document.getElementById('pauseButton').addEventListener('click', togglePause);
+  document.getElementById('mapButton').addEventListener('click', toggleMap);
+  document.getElementById('resumeBtn').addEventListener('click', togglePause);
+  document.getElementById('restartBtn').addEventListener('click', startGame);
+  document.getElementById('pauseMapBtn').addEventListener('click', () => { game.scene = 'pause'; toggleMap(); });
+  document.getElementById('backToTitleBtn').addEventListener('click', backToTitle);
+  document.getElementById('breathTapBtn').addEventListener('click', resolveBreathTap);
+  document.getElementById('breathCancelBtn').addEventListener('click', () => { if (game) { game.scene = 'playing'; game.breathChallenge = null; hideAllScreens(); } });
+  document.getElementById('triageUrgentBtn').addEventListener('click', () => resolveTriageChoice('urgent'));
+  document.getElementById('triageSoonBtn').addEventListener('click', () => resolveTriageChoice('soon'));
+  document.getElementById('triageNoiseBtn').addEventListener('click', () => resolveTriageChoice('noise'));
+  document.getElementById('triageCancelBtn').addEventListener('click', () => { if (game) { game.scene = 'playing'; game.triageChallenge = null; hideAllScreens(); } });
+  document.getElementById('debriefSkipBtn').addEventListener('click', skipDebrief);
+  document.getElementById('playAgainBtn').addEventListener('click', startGame);
+  document.getElementById('titleFromSummaryBtn').addEventListener('click', backToTitle);
+  document.getElementById('downloadTelemetryBtn').addEventListener('click', () => {
+    if (!game) return;
+    const data = {
+      district: 'Harbor of Drift',
+      summary: game.summary,
+      contracts: game.contracts,
+      restoration: game.restoration,
+      routeStyle: game.routeLabel,
+      briefing: { load: game.shiftLoad, supportStyle: game.supportStyle, goalFocus: game.goalFocus },
+      triageAccuracy: game.triageAccuracy,
+      supportLinks: game.supportLinks,
+      debriefHistory: game.debriefHistory,
+      bridgeBackPlan: game.bridgeBackPlan,
+      telemetry: game.telemetry
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'harbor_of_drift_session_notes.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+
+
+  if (touchRefs.pad) {
+    touchRefs.pad.addEventListener('pointerdown', (e) => {
+      if (!perf.mobile) return;
+      e.preventDefault();
+      touch.id = e.pointerId;
+      touchRefs.pad.setPointerCapture(e.pointerId);
+      updateTouchStickFromEvent(e);
+    });
+    touchRefs.pad.addEventListener('pointermove', (e) => {
+      if (!perf.mobile || touch.id !== e.pointerId) return;
+      e.preventDefault();
+      updateTouchStickFromEvent(e);
+    });
+    const endTouch = (e) => {
+      if (touch.id !== null && e.pointerId !== touch.id) return;
+      resetTouchStick();
+    };
+    touchRefs.pad.addEventListener('pointerup', endTouch);
+    touchRefs.pad.addEventListener('pointercancel', endTouch);
+  }
+
+  function bindTouchButton(el, onDown, onUp) {
+    if (!el) return;
+    el.addEventListener('pointerdown', (e) => { if (!perf.mobile) return; e.preventDefault(); onDown && onDown(); });
+    el.addEventListener('pointerup', (e) => { if (!perf.mobile) return; e.preventDefault(); onUp && onUp(); });
+    el.addEventListener('pointercancel', () => { if (!perf.mobile) return; onUp && onUp(); });
+    el.addEventListener('pointerleave', () => { if (!perf.mobile) return; onUp && onUp(); });
+  }
+
+  bindTouchButton(touchRefs.fire, () => { touch.fire = true; if (game && game.scene === 'playing') shootPlayer(); }, () => { touch.fire = false; });
+  bindTouchButton(touchRefs.guard, () => useGuard());
+  bindTouchButton(touchRefs.pulse, () => usePulse());
+  bindTouchButton(touchRefs.dash, () => triggerDash());
+  bindTouchButton(touchRefs.use, () => interact());
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!perf.mobile) return;
+    const rect = canvas.getBoundingClientRect();
+    input.mouse.x = e.clientX - rect.left;
+    input.mouse.y = e.clientY - rect.top;
+    input.mouse.worldX = input.mouse.x + (game ? game.cam.x : 0);
+    input.mouse.worldY = input.mouse.y + (game ? game.cam.y : 0);
+  }, { passive: true });
+
+  // Safe boot state
+  backToTitle();
+
+  // Expose tiny debug handle for testing.
+  window.__HarborGame = {
+    startGame,
+    getState: () => game,
+    teleport: (x, y) => { if (game) { game.player.x = x; game.player.y = y; } },
+    completeAll: () => {
+      if (!game) return;
+      game.contracts.relay1 = true; game.relay1.restored = true; game.contracts.anchors = true; game.anchorNet.restored = true; game.contracts.dispatch = true; game.dispatchRelay.restored = true; game.contracts.ledger = true; game.ledgerRelay.restored = true; game.contractsDone = 4; game.restoration = 90; maybeSpawnBoss();
+    },
+    winNow: () => { if (game) resetToSummary(true); }
+  };
+  window.__ShiftworksTest = {
+    start: startGame,
+    state: () => game,
+    teleport: (x, y) => { if (game) { game.player.x = x; game.player.y = y; } },
+    skipToBoss: () => { if (game) { window.__HarborGame.completeAll(); } },
+    win: () => { if (game) resetToSummary(true); }
+  };
+})();
+</script>
+</body>
+</html>

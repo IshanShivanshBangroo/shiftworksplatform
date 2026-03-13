@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shiftworks · Ward Relay</title>
+<style>
+  :root{
+    --ink:#1a1714;
+    --paper:#f7f1e8;
+    --paper2:#fbf8f4;
+    --muted:#665e55;
+    --line:rgba(32,24,18,0.1);
+    --navy:#516982;
+    --sage:#6c8a67;
+    --gold:#c59b58;
+    --coral:#c9775e;
+    --teal:#4d7c77;
+    --plum:#746382;
+    --shadow:0 20px 48px rgba(0,0,0,0.16);
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;min-height:100%;
+    font-family:"Segoe UI","Trebuchet MS",system-ui,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(circle at top left, rgba(201,119,94,.14), transparent 18%),
+      radial-gradient(circle at top right, rgba(81,105,130,.14), transparent 18%),
+      linear-gradient(180deg,#f2e7d8,#e7ddcf 42%, #ddd6ca 100%);
+  }
+  body{padding:22px}
+  .shell{max-width:1240px;margin:0 auto}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+  .back{padding:10px 14px;border-radius:999px;background:#211b17;color:#fff;text-decoration:none;font-weight:700}
+  .layout{display:grid;grid-template-columns:330px 1fr;gap:18px}
+  .panel{
+    background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.56));
+    border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden
+  }
+  .sideHead,.mainHead{padding:22px 24px;border-bottom:1px solid var(--line)}
+  .sideHead{background:linear-gradient(160deg,#f7eddc,#efe4d2)}
+  .mainHead{
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.08)),
+      linear-gradient(140deg,#4f6981,#70865f 42%, #d1b15e 100%);
+    color:#fff
+  }
+  .kicker{text-transform:uppercase;letter-spacing:.17em;font-size:.78rem;font-weight:800;color:#7d6548}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;letter-spacing:.01em}
+  h1{margin:.2rem 0 0;font-size:clamp(2rem,3.6vw,3rem)}
+  h2{margin:0;font-size:clamp(1.45rem,2.2vw,2rem)}
+  h3{margin:.1rem 0 .45rem}
+  .subtitle{line-height:1.58;color:#433a34}
+  .mainHead .subtitle{color:#f3ede6;max-width:760px}
+  .sideBody,.mainBody{padding:20px 22px 24px}
+  .statGrid{display:grid;gap:10px}
+  .stat{
+    padding:14px;border-radius:18px;background:rgba(255,255,255,.8);border:1px solid rgba(32,24,18,.08)
+  }
+  .stat span{display:block;font-size:.75rem;color:#6b645d}
+  .stat strong{display:block;margin-top:4px;font-size:1.06rem}
+  .roundDots{display:flex;gap:8px;margin:14px 0 0}
+  .dot{width:14px;height:14px;border-radius:50%;background:#d6ccc1;border:2px solid rgba(0,0,0,.05)}
+  .dot.done{background:var(--sage)}
+  .dot.now{background:var(--gold)}
+  .eventCard{
+    margin-top:14px;padding:14px;border-radius:18px;background:linear-gradient(180deg,rgba(201,119,94,.12),rgba(201,119,94,.05));
+    border:1px solid rgba(32,24,18,.08)
+  }
+  .actionGrid{display:grid;gap:10px;margin-top:14px}
+  .actionBtn{
+    text-align:left;padding:12px 14px;border-radius:16px;border:1px solid rgba(32,24,18,.1);
+    background:#fff;cursor:pointer
+  }
+  .actionBtn.active{border-color:rgba(76,124,119,.4);box-shadow:0 0 0 2px rgba(76,124,119,.14)}
+  .boardInfo{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:12px;margin-top:16px}
+  .lane{
+    padding:14px;border-radius:18px;border:1px solid rgba(32,24,18,.08);background:rgba(255,255,255,.78)
+  }
+  .lane.now{box-shadow:inset 0 0 0 2px rgba(201,119,94,.15)}
+  .lane.next{box-shadow:inset 0 0 0 2px rgba(81,105,130,.14)}
+  .lane.noise{box-shadow:inset 0 0 0 2px rgba(108,138,103,.16)}
+  .cardGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:14px;margin-top:18px}
+  .taskCard{
+    padding:16px;border-radius:22px;background:#fff;border:1px solid rgba(32,24,18,.09);
+    box-shadow:0 8px 20px rgba(0,0,0,.06)
+  }
+  .taskMeta{display:flex;justify-content:space-between;gap:10px;color:#6b645d;font-size:.8rem;margin-bottom:8px}
+  .sortRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  .sortBtn, button{
+    appearance:none;border:none;border-radius:14px;padding:10px 12px;font:inherit;cursor:pointer;
+    background:#f4efe7;border:1px solid rgba(32,24,18,.1);color:var(--ink)
+  }
+  .sortBtn.active.now{background:#f4ddd6;border-color:rgba(201,119,94,.42)}
+  .sortBtn.active.next{background:#dde5ef;border-color:rgba(81,105,130,.42)}
+  .sortBtn.active.noise{background:#dfebe0;border-color:rgba(108,138,103,.42)}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .primary{background:#211b17;color:#fff}
+  .accent{background:#516982;color:#fff}
+  .hintBox,.debriefBox,.summary{
+    margin-top:18px;padding:16px;border-radius:20px;border:1px solid rgba(32,24,18,.08);
+    background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.58))
+  }
+  .debriefChoices,.planChoices{display:grid;gap:10px;margin-top:12px}
+  .choiceBtn{padding:13px 14px;border-radius:16px;background:#fff;border:1px solid rgba(32,24,18,.1);text-align:left}
+  .choiceBtn strong{display:block;margin-bottom:4px}
+  .tiny{font-size:.82rem;color:#675f58;line-height:1.55}
+  .summary{display:none}
+  .quickStart{margin-top:14px;padding:14px;border-radius:18px;background:rgba(199,164,98,.08);border:1px solid rgba(199,164,98,.18)}
+  @media (max-width:980px){.layout{grid-template-columns:1fr}.boardInfo{grid-template-columns:1fr}}
+  @media (max-width:620px){body{padding:14px}.sortRow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <a class="back" href="index.html">Back to Shiftworks</a>
+    <div>Created by <strong style="font-weight:700">Ishan Bangroo</strong> · Module 3 · Ward Relay</div>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="sideHead">
+        <div class="kicker">Turn-based planning puzzle</div>
+        <h2>Shift board</h2>
+        <p class="subtitle">This game translates interruption management, microbreaks, and handoff discipline into a planning board instead of a map route. Same platform goal, different structure.</p>
+        <div class="roundDots" id="roundDots"></div>
+      </div>
+      <div class="sideBody">
+        <div class="statGrid">
+          <div class="stat"><span>Safety</span><strong id="safetyText">56</strong></div>
+          <div class="stat"><span>Focus</span><strong id="focusText">54</strong></div>
+          <div class="stat"><span>Static</span><strong id="staticText">26</strong></div>
+          <div class="stat"><span>Team trust</span><strong id="trustText">48</strong></div>
+          <div class="stat"><span>Score</span><strong id="scoreText">0</strong></div>
+        </div>
+
+        <div class="eventCard">
+          <div class="kicker">Round event</div>
+          <h3 id="eventTitle">Morning surge</h3>
+          <p class="tiny" id="eventText"></p>
+        </div>
+
+        <div class="eventCard" style="background:linear-gradient(180deg,rgba(81,105,130,.12),rgba(81,105,130,.05))">
+          <div class="kicker">Round action</div>
+          <p class="tiny">Choose one. Actions slightly change how the round resolves.</p>
+          <div class="actionGrid" id="actionGrid"></div>
+          <div style="margin-top:10px">
+            <label class="tiny"><input type="checkbox" id="returnPointChk" /> I marked a return point before the interruption.</label>
+          </div>
+        </div>
+
+        <div class="hintBox">
+          <div class="kicker">Skill reminder</div>
+          <p class="tiny" id="skillHint">Sort first. Then act. A loud task and an urgent task are not automatically the same thing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="mainHead">
+        <div class="kicker" style="color:#f2d6a2">Game board</div>
+        <h1>Ward Relay</h1>
+        <p class="subtitle">Each round gives you a stack of signals. Classify each as <strong>Now</strong>, <strong>Next</strong>, or <strong>Noise</strong>, choose one round action, and then resolve the board. Correct classification boosts safety and clarity. False urgency and neglected recovery increase Static and erode the next round.</p>
+        <p class="tiny" style="margin-top:10px">Designed by Ishan Bangroo for adult audiences who want a more serious planning challenge.</p>
+      </div>
+      <div class="mainBody">
+        <div class="boardInfo">
+          <div class="lane now"><h3>Now</h3><div class="tiny">Act this round. Delay is costly.</div></div>
+          <div class="lane next"><h3>Next</h3><div class="tiny">Important, but not this second.</div></div>
+          <div class="lane noise"><h3>Noise</h3><div class="tiny">Duplicated, vague, or low-value chatter.</div></div>
+        </div>
+
+        <div class="cardGrid" id="cardGrid"></div>
+
+        <div class="controls">
+          <button class="primary" id="resolveBtn">Resolve round</button>
+          <button class="accent" id="exportBtn">Save session notes</button>
+          <button id="resetBtn">Restart board</button>
+        </div>
+
+        <div class="debriefBox" id="debriefBox" style="display:none"></div>
+        <div class="summary" id="summaryBox"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const rounds = [
+    {
+      title:'Morning surge',
+      event:'The first wave hits before anyone has settled. One pager is genuinely urgent, two are follow-up work, and one rumor is consuming attention without evidence.',
+      hint:'Sort first. Then act. A loud task and an urgent task are not automatically the same thing.',
+      tasks:[
+        { title:'Medication room scanner offline', body:'Scanning failures are already delaying one time-sensitive step for a patient in process.', correct:'now', stake:'High', note:'Clear blocker in an active workflow.' },
+        { title:'Request to restock forms by lunch', body:'Useful maintenance work, but no active care is blocked right now.', correct:'next', stake:'Medium', note:'Important, but not immediate.' },
+        { title:'Three duplicate messages about the same room number typo', body:'Same issue, no new detail, no safety impact.', correct:'noise', stake:'Low', note:'Repeated chatter with no new operational value.' },
+        { title:'Rumor that today’s whole schedule may collapse', body:'No source, no confirmation, and no operational evidence.', correct:'noise', stake:'Low', note:'Weak signal with no operational value.' },
+        { title:'Family waiting for update on delayed imaging slot', body:'Needs a clear communication plan, but imaging is still scheduled later this hour.', correct:'next', stake:'Medium', note:'Needs attention soon, not now-now.' }
+      ],
+      actions:[
+        { id:'microbreak', title:'Microbreak first', text:'Take 75 seconds to downshift before touching the board.', effect:{ static:-8, focus:+8 } },
+        { id:'support', title:'Support ping', text:'Ask one teammate to field non-urgent chatter for this round.', effect:{ trust:+8, static:-4 } },
+        { id:'protected', title:'Protected lane', text:'Block alert checking while you classify the board.', effect:{ safety:+4 } },
+        { id:'buffer', title:'Buffer check', text:'Add a short verification step on the highest-stakes task.', effect:{ safety:+6, focus:-2 } }
+      ],
+      debrief:[
+        { key:'cluster', title:'Cluster non-urgent messages', text:'Next round, correct “noise” calls are worth extra points.', apply:(s)=>{ s.buffNoise = (s.buffNoise||0)+1; } },
+        { key:'one_lane', title:'One lane at a time', text:'Next round starts with slightly lower Static.', apply:(s)=>{ s.static = Math.max(0, s.static - 6); } }
+      ]
+    },
+    {
+      title:'Corridor interruptions',
+      event:'People keep leaning in mid-task. This round is about interruption management and protecting a return path.',
+      hint:'When interruptions are unavoidable, a brief return cue can make resumption much cleaner.',
+      tasks:[
+        { title:'Critical lab value callback', body:'The lab needs acknowledgment right now.', correct:'now', stake:'High', note:'This one really is immediate.' },
+        { title:'Printer jam in the education room', body:'Annoying, but another printer is available nearby.', correct:'noise', stake:'Low', note:'Irritating does not make it urgent.' },
+        { title:'Question about tomorrow’s staff huddle slide deck', body:'Worth answering, but not during active callbacks.', correct:'next', stake:'Medium', note:'Schedule it, do not let it hijack.' },
+        { title:'Second reminder about a documentation correction due this afternoon', body:'Legitimate, but the deadline is later and no current action is blocked.', correct:'next', stake:'Medium', note:'Soon, not now.' },
+        { title:'Alarm from a transport monitor in the active bay', body:'Needs immediate eyes on it or rapid escalation.', correct:'now', stake:'High', note:'This is immediate. Move now.' }
+      ],
+      actions:[
+        { id:'return_note', title:'Mark return point', text:'Write one line about what you were doing before the interruption.', effect:{ focus:+6 } },
+        { id:'support', title:'Support ping', text:'Have a teammate intercept low-value walk-ups.', effect:{ trust:+6, static:-3 } },
+        { id:'microbreak', title:'Microbreak', text:'Take one minute after the callback before reentering the board.', effect:{ static:-7, focus:+5 } },
+        { id:'reframe', title:'Reframe note', text:'Rename “everything is on fire” to “two true urgencies plus clutter.”', effect:{ clarity:+6 } }
+      ],
+      debrief:[
+        { key:'return_bias', title:'Leave yourself a return cue', text:'Future interruption penalties are lighter if you mark a return point.', apply:(s)=>{ s.returnCueBonus = 1; } },
+        { key:'channel', title:'Pick a channel', text:'Next round, the first mis-sorted noise card is forgiven.', apply:(s)=>{ s.noiseForgive = 1; } }
+      ]
+    },
+    {
+      title:'Midday drag',
+      event:'Fatigue is making the whole board look equally hostile. This is where false urgency and real depletion become very annoying roommates.',
+      hint:'Recovery is not laziness in a nicer hat. Fatigue changes classification quality.',
+      tasks:[
+        { title:'Patient asks for a comfort item while waiting', body:'Meaningful and relational, but not time-critical over active care tasks.', correct:'next', stake:'Medium', note:'Soon, with dignity.' },
+        { title:'Team chat explodes over a typo in the rota', body:'Many messages, little practical consequence for this round.', correct:'noise', stake:'Low', note:'High message volume does not always mean operational value.' },
+        { title:'Medication reconciliation mismatch on intake', body:'Needs verification before the next administration point.', correct:'now', stake:'High', note:'Important safety task.' },
+        { title:'Reminder to submit expense receipt this week', body:'Administrative and not a same-hour problem.', correct:'noise', stake:'Low', note:'This can wait.' },
+        { title:'Family asks when they should return for the consult', body:'Needs a helpful answer before discharge planning stalls.', correct:'next', stake:'Medium', note:'Important soon.' }
+      ],
+      actions:[
+        { id:'microbreak', title:'Stretch + sip', text:'Take a genuine short reset before classifying.', effect:{ static:-10, focus:+9 } },
+        { id:'support', title:'Name the load out loud', text:'Briefly tell a teammate you are in a fatigue dip.', effect:{ trust:+7, static:-4 } },
+        { id:'protected', title:'Protected lane', text:'Silence non-mandatory notifications for five minutes.', effect:{ safety:+4, static:-2 } },
+        { id:'buffer', title:'Double-check the stake', text:'Review only the highest-stakes card before resolving.', effect:{ safety:+5 } }
+      ],
+      debrief:[
+        { key:'bench', title:'Take the reset before the board', text:'Next round begins with more Focus.', apply:(s)=>{ s.focus = Math.min(100, s.focus + 8); } },
+        { key:'ask_help', title:'Use support before collapse', text:'Next support action gives extra trust and lower Static.', apply:(s)=>{ s.supportBonus = 1; } }
+      ]
+    },
+    {
+      title:'Late-shift compression',
+      event:'Time pressure is real now. The trick is not to become sloppy while the clock starts throwing elbows.',
+      hint:'Compression is exactly when a handoff note matters. You are designing the next step, not merely surviving the current one.',
+      tasks:[
+        { title:'Transport team waiting on final room destination', body:'Current movement is blocked pending your answer.', correct:'now', stake:'High', note:'Blocking active flow.' },
+        { title:'Optional newsletter about next month’s training', body:'Useful later, but not for this round.', correct:'noise', stake:'Low', note:'Useful later, but outside this round.' },
+        { title:'Phone call asking whether a non-urgent follow-up can be moved to tomorrow', body:'Needs a plan, but not during active transport coordination.', correct:'next', stake:'Medium', note:'Schedule it. Do not let it hijack the round.' },
+        { title:'Duplicate reminder from two systems for the same documentation item', body:'The second reminder adds no new information.', correct:'noise', stake:'Low', note:'Same alert repeated through a second channel.' },
+        { title:'Need to verify allergy note before handoff', body:'Safety-relevant and near-term.', correct:'now', stake:'High', note:'Do not punt this into the void.' }
+      ],
+      actions:[
+        { id:'handoff', title:'Draft handoff early', text:'Write the next owner and next action before the final minute.', effect:{ safety:+6, trust:+4 } },
+        { id:'microbreak', title:'Reset anyway', text:'Forty seconds is still a reset, even late in the shift.', effect:{ static:-6, focus:+4 } },
+        { id:'reframe', title:'Name the real time box', text:'Replace “I have no time” with the actual remaining block.', effect:{ clarity:+6, static:-3 } },
+        { id:'support', title:'Call in a second pair of eyes', text:'Ask someone to sanity-check the two highest-stakes cards.', effect:{ trust:+8, safety:+3 } }
+      ],
+      debrief:[
+        { key:'owner', title:'Always name the next owner', text:'Final round earns bonus points for correct “next” calls.', apply:(s)=>{ s.nextBonus = (s.nextBonus||0)+1; } },
+        { key:'timebox', title:'Use the real time box', text:'Static is slightly lower in the final round.', apply:(s)=>{ s.static = Math.max(0, s.static - 5); } }
+      ]
+    },
+    {
+      title:'Final handoff',
+      event:'The last board decides whether tomorrow inherits signal or clutter. End strong, not grandiose.',
+      hint:'Good endings are designed. They do not appear because the clock felt bad for you.',
+      tasks:[
+        { title:'One unresolved safety check remains from the current patient set', body:'Needs explicit ownership before handoff completes.', correct:'now', stake:'High', note:'This cannot float.' },
+        { title:'Question about where to store old flyers', body:'This can wait for a later block.', correct:'noise', stake:'Low', note:'Clearly later.' },
+        { title:'Incoming note about a next-day scheduling preference', body:'Should be captured for the next shift, but not actioned now.', correct:'next', stake:'Medium', note:'A textbook “next”.' },
+        { title:'Third copy of a soft reminder you already completed', body:'No action remains. The reminder is repeating closed work.', correct:'noise', stake:'Low', note:'Repeated paperwork with no new action.' },
+        { title:'Need to tell the oncoming team one specific blocker still open', body:'Not a current fix, but a critical handoff element.', correct:'next', stake:'High', note:'Handoff-relevant and concrete.' }
+      ],
+      actions:[
+        { id:'handoff', title:'Concrete handoff note', text:'Write owner, blocker, next step, and time cue.', effect:{ safety:+7, trust:+5 } },
+        { id:'support', title:'Read it aloud with a teammate', text:'A shared check catches ambiguity.', effect:{ trust:+9, safety:+4 } },
+        { id:'microbreak', title:'Unclench before you close', text:'One short reset before the final classification.', effect:{ static:-6, focus:+5 } },
+        { id:'buffer', title:'Last stake review', text:'Double-check the highest-risk “now” task before lock-in.', effect:{ safety:+5 } }
+      ],
+      debrief:[]
+    }
+  ];
+
+  const state = {
+    round: 0,
+    safety: 56,
+    focus: 54,
+    static: 26,
+    trust: 48,
+    score: 0,
+    clarity: 50,
+    selections: {},
+    action: null,
+    telemetry: [],
+    returnPoint: false
+  };
+
+  const els = {
+    roundDots: document.getElementById('roundDots'),
+    safetyText: document.getElementById('safetyText'),
+    focusText: document.getElementById('focusText'),
+    staticText: document.getElementById('staticText'),
+    trustText: document.getElementById('trustText'),
+    scoreText: document.getElementById('scoreText'),
+    eventTitle: document.getElementById('eventTitle'),
+    eventText: document.getElementById('eventText'),
+    skillHint: document.getElementById('skillHint'),
+    actionGrid: document.getElementById('actionGrid'),
+    cardGrid: document.getElementById('cardGrid'),
+    resolveBtn: document.getElementById('resolveBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    debriefBox: document.getElementById('debriefBox'),
+    summaryBox: document.getElementById('summaryBox'),
+    returnPointChk: document.getElementById('returnPointChk')
+  };
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  function esc(v){ return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'", '&#39;'); }
+  function currentRound(){ return rounds[state.round]; }
+  function log(type, payload){ state.telemetry.push(Object.assign({ type, round: state.round + 1, t: new Date().toISOString() }, payload || {})); }
+
+  function renderDots(){
+    els.roundDots.innerHTML = '';
+    rounds.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i < state.round ? ' done' : i === state.round ? ' now' : '');
+      els.roundDots.appendChild(d);
+    });
+  }
+
+  function renderStats(){
+    els.safetyText.textContent = state.safety;
+    els.focusText.textContent = state.focus;
+    els.staticText.textContent = state.static;
+    els.trustText.textContent = state.trust;
+    els.scoreText.textContent = state.score;
+  }
+
+  function renderActions(){
+    els.actionGrid.innerHTML = '';
+    const round = currentRound();
+    round.actions.forEach(action => {
+      const btn = document.createElement('button');
+      btn.className = 'actionBtn' + (state.action === action.id ? ' active' : '');
+      btn.innerHTML = `<strong>${esc(action.title)}</strong><div class="tiny">${esc(action.text)}</div>`;
+      btn.addEventListener('click', () => {
+        state.action = action.id;
+        renderActions();
+      });
+      els.actionGrid.appendChild(btn);
+    });
+  }
+
+  function renderTasks(){
+    const round = currentRound();
+    els.cardGrid.innerHTML = '';
+    round.tasks.forEach((task, idx) => {
+      const card = document.createElement('div');
+      card.className = 'taskCard';
+      const selected = state.selections[idx] || '';
+      card.innerHTML = `
+        <div class="taskMeta"><span>${esc(task.stake)} stake</span><span>${esc(task.note)}</span></div>
+        <h3>${esc(task.title)}</h3>
+        <div class="tiny">${esc(task.body)}</div>
+        <div class="sortRow">
+          <button class="sortBtn now ${selected==='now'?'active now':''}" data-kind="now">Now</button>
+          <button class="sortBtn next ${selected==='next'?'active next':''}" data-kind="next">Next</button>
+          <button class="sortBtn noise ${selected==='noise'?'active noise':''}" data-kind="noise">Noise</button>
+        </div>
+      `;
+      card.querySelectorAll('.sortBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selections[idx] = btn.getAttribute('data-kind');
+          renderTasks();
+        });
+      });
+      els.cardGrid.appendChild(card);
+    });
+  }
+
+  function applyRoundAction(round){
+    if (!state.action) return;
+    const chosen = round.actions.find(a => a.id === state.action);
+    if (!chosen) return;
+    const eff = chosen.effect || {};
+    state.safety = clamp(state.safety + (eff.safety || 0), 0, 100);
+    state.focus = clamp(state.focus + (eff.focus || 0), 0, 100);
+    state.static = clamp(state.static + (eff.static || 0), 0, 100);
+    state.trust = clamp(state.trust + (eff.trust || 0), 0, 100);
+    state.clarity = clamp((state.clarity || 50) + (eff.clarity || 0), 0, 100);
+    log('round_action', { action: state.action });
+  }
+
+  function resolveRound(){
+    const round = currentRound();
+    if (!state.action) {
+      alert('Choose one round action first.');
+      return;
+    }
+    let correct = 0;
+    let nowHits = 0;
+    let nextHits = 0;
+    let noiseHits = 0;
+    let penalties = 0;
+    let notes = [];
+    applyRoundAction(round);
+
+    round.tasks.forEach((task, idx) => {
+      const chosen = state.selections[idx] || null;
+      if (!chosen) {
+        penalties += 6;
+        state.static = clamp(state.static + 5, 0, 100);
+        notes.push(`You left "${task.title}" unsorted.`);
+        log('unsorted', { task: task.title });
+        return;
+      }
+      const good = chosen === task.correct;
+      log('sort', { task: task.title, chosen, answer: task.correct, correct: good });
+      if (good) {
+        correct += 1;
+        state.score += task.correct === 'now' ? 28 : task.correct === 'next' ? 22 : 16;
+        if (task.correct === 'now') nowHits += 1;
+        if (task.correct === 'next') nextHits += 1;
+        if (task.correct === 'noise') noiseHits += 1;
+        state.focus = clamp(state.focus + 2, 0, 100);
+        state.static = clamp(state.static - 1, 0, 100);
+      } else {
+        penalties += task.correct === 'now' ? 9 : 5;
+        state.static = clamp(state.static + (task.correct === 'now' ? 8 : 5), 0, 100);
+        state.focus = clamp(state.focus - 4, 0, 100);
+        notes.push(`"${task.title}" was better treated as ${task.correct.toUpperCase()}.`);
+      }
+    });
+
+    if (state.returnPoint) {
+      state.focus = clamp(state.focus + 4 + (state.returnCueBonus ? 2 : 0), 0, 100);
+      state.static = clamp(state.static - 3, 0, 100);
+      state.score += 8;
+      notes.push('You marked a return point before the interruption hit.');
+      log('return_point', { used: true });
+    } else {
+      penalties += round.title === 'Corridor interruptions' ? 4 : 0;
+      if (round.title === 'Corridor interruptions') notes.push('No return cue was marked during an interruption-heavy round.');
+    }
+
+    if (state.noiseForgive && noiseHits < round.tasks.filter(t => t.correct === 'noise').length) {
+      state.noiseForgive = 0;
+      penalties = Math.max(0, penalties - 5);
+      notes.push('A carry-forward option forgave one noisy miss.');
+    }
+
+    if (state.buffNoise) state.score += noiseHits * 4 * state.buffNoise;
+    if (state.nextBonus) state.score += nextHits * 4 * state.nextBonus;
+
+    state.safety = clamp(state.safety + correct * 4 - penalties, 0, 100);
+    state.trust = clamp(state.trust + (correct >= 4 ? 4 : 0) - (penalties > 12 ? 3 : 0), 0, 100);
+    state.score += correct * 12;
+    state.static = clamp(state.static + Math.max(0, 3 - correct), 0, 100);
+
+    els.debriefBox.style.display = 'block';
+    if (state.round < rounds.length - 1) {
+      renderDebrief(round, correct, penalties, notes);
+    } else {
+      renderSummary(correct, penalties, notes);
+    }
+    renderStats();
+  }
+
+  function renderDebrief(round, correct, penalties, notes){
+    els.debriefBox.innerHTML = `
+      <div class="kicker">Round closeout</div>
+      <h3>${esc(round.title)} resolved</h3>
+      <p class="tiny">Correct sorts: ${correct} / ${round.tasks.length}. Penalty load: ${penalties}. ${esc(notes.join(' '))}</p>
+      <div class="debriefChoices" id="debriefChoices"></div>
+    `;
+    const wrap = document.getElementById('debriefChoices');
+    round.debrief.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'choiceBtn';
+      btn.innerHTML = `<strong>${esc(choice.title)}</strong><div class="tiny">${esc(choice.text)}</div>`;
+      btn.addEventListener('click', () => {
+        choice.apply(state);
+        state.round += 1;
+        state.selections = {};
+        state.action = null;
+        state.returnPoint = false;
+        els.returnPointChk.checked = false;
+        els.debriefBox.style.display = 'none';
+        renderRound();
+        log('debrief_choice', { choice: choice.key });
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderSummary(correct, penalties, notes){
+    const plans = [
+      'If two interruptions collide, then I will mark a return point before answering either one.',
+      'If a board feels equally urgent, then I will force a now / next / noise sort before I move.',
+      'If fatigue makes the whole shift feel hostile, then I will take a short microbreak before reclassifying tasks.',
+      'If a round ends, then I will write one concrete handoff note before I leave it.'
+    ];
+    els.summaryBox.style.display = 'block';
+    els.summaryBox.innerHTML = `
+      <div class="kicker">Run summary</div>
+      <h2>Board closed</h2>
+      <p class="tiny">Final round: ${correct} / ${currentRound().tasks.length} correct. Penalty load: ${penalties}. ${esc(notes.join(' '))}</p>
+      <div class="boardInfo" style="margin-top:14px">
+        <div class="stat"><span>Safety</span><strong>${state.safety}</strong></div>
+        <div class="stat"><span>Focus</span><strong>${state.focus}</strong></div>
+        <div class="stat"><span>Static</span><strong>${state.static}</strong></div>
+      </div>
+      <div class="planChoices" id="planChoices"></div>
+      <p class="tiny" style="margin-top:14px">Choose one bridge-back plan and save session notes if you want to keep this board.</p>
+    `;
+    const wrap = document.getElementById('planChoices');
+    plans.forEach((plan) => {
+      const btn = document.createElement('button');
+      btn.className = 'choiceBtn';
+      btn.innerHTML = `<strong>Bridge-back plan</strong><div class="tiny">${esc(plan)}</div>`;
+      btn.addEventListener('click', () => {
+        state.bridgeBack = plan;
+        log('bridge_back', { plan });
+        renderSummary(correct, penalties, notes.concat(['Selected plan: ' + plan]));
+      });
+      wrap.appendChild(btn);
+    });
+    if (state.bridgeBack) {
+      const note = document.createElement('div');
+      note.className = 'hintBox';
+      note.style.marginTop = '12px';
+      note.textContent = 'Selected plan: ' + state.bridgeBack;
+      els.summaryBox.appendChild(note);
+    }
+    log('run_end', { safety: state.safety, focus: state.focus, static: state.static, trust: state.trust, score: state.score });
+  }
+
+  function renderRound(){
+    renderDots();
+    renderStats();
+    const round = currentRound();
+    els.eventTitle.textContent = round.title;
+    els.eventText.textContent = round.event;
+    els.skillHint.textContent = round.hint;
+    renderActions();
+    renderTasks();
+    els.summaryBox.style.display = 'none';
+  }
+
+  function exportJson(){
+    const payload = {
+      game:'Ward Relay',
+      state:{
+        round:state.round,
+        safety:state.safety,
+        focus:state.focus,
+        static:state.static,
+        trust:state.trust,
+        score:state.score,
+        bridgeBack:state.bridgeBack || null
+      },
+      sessionEvents:state.telemetry
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ward_relay_session_notes.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  }
+
+  function reset(){
+    state.round = 0;
+    state.safety = 56;
+    state.focus = 54;
+    state.static = 26;
+    state.trust = 48;
+    state.score = 0;
+    state.clarity = 50;
+    state.selections = {};
+    state.action = null;
+    state.telemetry = [];
+    state.returnPoint = false;
+    state.bridgeBack = null;
+    state.buffNoise = 0;
+    state.returnCueBonus = 0;
+    state.noiseForgive = 0;
+    state.nextBonus = 0;
+    els.debriefBox.style.display = 'none';
+    els.summaryBox.style.display = 'none';
+    els.returnPointChk.checked = false;
+    renderRound();
+    log('run_start');
+  }
+
+  window.__ShiftworksTest = {
+    module: 'ward_relay',
+    getState: () => ({ round: state.round, action: state.action, selections: state.selections, score: state.score, over: !!state.bridgeBack }),
+    reset, resolveRound,
+    setAction: (id) => { state.action = id; renderActions(); },
+    setSelection: (index, kind) => { state.selections[index] = kind; renderTasks(); },
+    setReturnPoint: (value) => { state.returnPoint = !!value; els.returnPointChk.checked = !!value; }
+  };
+
+  els.resolveBtn.addEventListener('click', resolveRound);
+  els.resetBtn.addEventListener('click', reset);
+  els.exportBtn.addEventListener('click', exportJson);
+  els.returnPointChk.addEventListener('change', () => { state.returnPoint = els.returnPointChk.checked; });
+
+  reset();
+})();
+</script>
+</body>
+</html>

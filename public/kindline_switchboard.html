@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shiftworks · Kindline Switchboard</title>
+<style>
+  :root{
+    --bg1:#241926;
+    --bg2:#4b3651;
+    --bg3:#d4a36b;
+    --paper:rgba(255,248,241,.92);
+    --ink:#21171b;
+    --muted:#62555f;
+    --line:rgba(44,30,37,.12);
+    --rose:#c9848d;
+    --plum:#7a5c80;
+    --navy:#43567a;
+    --sage:#7d9a7b;
+    --gold:#ca9a59;
+    --good:#6e9a74;
+    --bad:#b76663;
+    --shadow:0 24px 56px rgba(0,0,0,.22);
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;min-height:100%;color:var(--ink);
+    font-family:"Segoe UI","Trebuchet MS",system-ui,sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(202,154,89,.24), transparent 20%),
+      radial-gradient(circle at top right, rgba(125,154,123,.16), transparent 20%),
+      linear-gradient(160deg,var(--bg1),var(--bg2) 46%, #76555f 72%, var(--bg3) 128%);
+  }
+  body{padding:22px}
+  .shell{max-width:1280px;margin:0 auto}
+  .topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px;color:#f7efe7}
+  .back{padding:10px 14px;border-radius:999px;background:rgba(22,15,18,.7);border:1px solid rgba(255,255,255,.14);text-decoration:none;color:#fff;font-weight:700}
+  .hero{display:grid;grid-template-columns:1.12fr .88fr;gap:18px}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+  .heroHead{padding:24px 26px 18px;background:
+      linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,.16)),
+      linear-gradient(145deg,#eedcc8,#f4eee8 58%, #e7dde9 100%);border-bottom:1px solid var(--line)}
+  .radioHead{padding:24px 26px 18px;color:#fff;background:
+      linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.04)),
+      linear-gradient(145deg,#392e46,#544066 48%, #815960 100%);border-bottom:1px solid rgba(255,255,255,.12)}
+  .body{padding:20px 22px 24px}
+  .kicker{text-transform:uppercase;letter-spacing:.18em;font-size:.76rem;font-weight:800;color:#7a5c80}
+  .radioHead .kicker{color:#f2d9b7}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;letter-spacing:.01em}
+  h1{margin:.2rem 0 0;font-size:clamp(2rem,3.7vw,3.3rem)}
+  h2{margin:0;font-size:clamp(1.35rem,2.2vw,2rem)}
+  h3{margin:0 0 8px}
+  .subtitle{line-height:1.6;max-width:760px;color:#43373f;margin-top:12px}
+  .radioHead .subtitle{color:#f2e8e9}
+  .meterRow{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;margin-top:16px}
+  .meter{padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.72);border:1px solid rgba(44,30,37,.08)}
+  .meter span{display:block;font-size:.76rem;color:#6a5d65}
+  .meter strong{display:block;margin-top:4px;font-size:1.05rem}
+  .sceneDots{display:flex;gap:8px;align-items:center;margin-top:16px}
+  .dot{width:14px;height:14px;border-radius:50%;background:#d9c5cf;border:2px solid rgba(0,0,0,.05)}
+  .dot.done{background:var(--sage)}
+  .dot.now{background:var(--gold);transform:scale(1.12)}
+  .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  .card{padding:16px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.6));border:1px solid rgba(44,30,37,.08)}
+  .lightRow{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .bulb{width:14px;height:14px;border-radius:50%;background:#cfbfc9;box-shadow:inset 0 0 0 2px rgba(0,0,0,.05)}
+  .bulb.active{background:#ca9a59;box-shadow:0 0 10px rgba(202,154,89,.6)}
+  .labelPill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(122,92,128,.12);border:1px solid rgba(122,92,128,.18);font-size:.78rem}
+  .sectionHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+  .grid{display:grid;gap:12px}
+  .lineBtn,.responseBtn,.noteBtn,button{
+    appearance:none;border:none;border-radius:20px;padding:14px 15px;font:inherit;cursor:pointer;text-align:left;
+    background:#fff;border:1px solid rgba(44,30,37,.1);color:var(--ink)
+  }
+  .lineBtn:hover,.responseBtn:hover,.noteBtn:hover,button:hover{filter:brightness(1.02)}
+  .lineBtn.active{box-shadow:0 0 0 2px rgba(202,154,89,.18);border-color:rgba(202,154,89,.42);background:#fff7eb}
+  .responseBtn.active{box-shadow:0 0 0 2px rgba(67,86,122,.18);border-color:rgba(67,86,122,.42);background:#eef2fb}
+  .noteBtn.active{box-shadow:0 0 0 2px rgba(125,154,123,.18);border-color:rgba(125,154,123,.42);background:#edf4ed}
+  .lineBtn strong,.responseBtn strong,.noteBtn strong{display:block;margin-bottom:6px}
+  .lineBtn small,.responseBtn small,.noteBtn small{display:block;color:#655960;line-height:1.45}
+  .lineMeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .tinyTag{padding:5px 8px;border-radius:999px;background:rgba(67,86,122,.08);font-size:.74rem;border:1px solid rgba(67,86,122,.1)}
+  .responseBtn[disabled],.noteBtn[disabled],button[disabled]{opacity:.55;cursor:not-allowed}
+  .outcome{display:none;margin-top:18px;padding:16px;border-radius:20px;background:linear-gradient(180deg,rgba(125,154,123,.12),rgba(202,154,89,.08));border:1px solid rgba(44,30,37,.08)}
+  .actionRow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .primary{background:#42567a;color:#fff}
+  .accent{background:#7a5c80;color:#fff}
+  .warm{background:#ca9a59;color:#fff}
+  .good{background:#6e9a74;color:#fff}
+  .log{display:grid;gap:12px;max-height:460px;overflow:auto;padding-right:4px}
+  .msg{padding:14px;border-radius:18px;background:#fff;border:1px solid rgba(44,30,37,.08)}
+  .msg.quay{border-left:5px solid #ca9a59}
+  .msg.player{border-left:5px solid #42567a}
+  .msg.note{border-left:5px solid #6e9a74}
+  .msg .meta{font-size:.77rem;color:#6a5d65;margin-bottom:6px}
+  .status{margin-top:14px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.72);border:1px solid rgba(44,30,37,.08);color:#544850}
+  .switchboard{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .jack{padding:14px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);min-height:88px}
+  .jack strong{display:block}
+  .jack span{display:block;margin-top:5px;color:#f1e7e8;font-size:.9rem;line-height:1.4}
+  .summary{display:none;margin-top:18px;padding:18px;border-radius:22px;background:linear-gradient(180deg,rgba(122,92,128,.08),rgba(125,154,123,.08));border:1px solid rgba(44,30,37,.08)}
+  .exampleBox{margin-top:14px;padding:14px 16px;border-radius:18px;background:rgba(202,154,89,.08);border:1px solid rgba(202,154,89,.18)}
+  .summaryGrid{display:grid;grid-template-columns:repeat(2,minmax(160px,1fr));gap:10px;margin-top:14px}
+  .summaryCard{padding:12px 14px;border-radius:16px;background:#fff;border:1px solid rgba(44,30,37,.08)}
+  .tiny{font-size:.84rem;color:#6a5d65;line-height:1.55}
+  @media (max-width:1100px){.hero{grid-template-columns:1fr}.meterRow{grid-template-columns:repeat(3,minmax(110px,1fr))}}
+  @media (max-width:720px){body{padding:14px}.meterRow{grid-template-columns:repeat(2,minmax(110px,1fr))}.subgrid,.summaryGrid{grid-template-columns:1fr}.switchboard{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <a class="back" href="index.html">Back to Shiftworks</a>
+    <div>Created by <strong style="font-weight:700">Ishan Bangroo</strong> · Module 2 · Kindline Switchboard</div>
+  </div>
+
+  <div class="hero">
+    <section class="panel">
+      <div class="heroHead">
+        <div class="kicker">Narrative communications game</div>
+        <h1>Kindline Switchboard</h1>
+        <p class="subtitle">Three short scenes about crossed lines, rising pressure, and the next workable move. Pick the line that deserves the board, choose a response card that keeps the exchange workable, and leave a return-point or backup note that still makes sense when the room gets busy again.</p>
+        <div class="exampleBox"><strong>Worked example for Scene 1</strong><div class="tiny">Mark <em>Incoming admission</em> first, then choose <em>Mark the true now line</em>, then choose <em>Write a return-point card</em>. That one pass teaches the whole scene structure.</div></div>
+        <div class="meterRow">
+          <div class="meter"><span>Line clarity</span><strong id="clarityText">48</strong></div>
+          <div class="meter"><span>Crew trust</span><strong id="trustText">46</strong></div>
+          <div class="meter"><span>Breathing room</span><strong id="roomText">40</strong></div>
+          <div class="meter"><span>Forward motion</span><strong id="motionText">42</strong></div>
+          <div class="meter"><span>Score</span><strong id="scoreText">0</strong></div>
+        </div>
+        <div class="sceneDots" id="sceneDots"></div>
+      </div>
+      <div class="body">
+        <div class="card">
+          <div class="sectionHead">
+            <div>
+              <span class="labelPill" id="sceneTag">Scene 1</span>
+              <h2 id="sceneTitle" style="margin-top:10px">Lines crossing at once</h2>
+            </div>
+            <div class="lightRow" id="lightRow">
+              <div class="bulb active"></div><div class="bulb"></div><div class="bulb"></div>
+            </div>
+          </div>
+          <p id="sceneText" class="subtitle" style="margin:0"></p>
+          <div class="status tiny" id="focusCard">Step 1: Mark the line that actually deserves the board.</div>
+        </div>
+
+        <div class="subgrid">
+          <div class="card">
+            <div class="sectionHead"><h3>Incoming lines</h3><span class="tiny">Step 1</span></div>
+            <div class="grid" id="lineGrid"></div>
+          </div>
+          <div class="card">
+            <div class="sectionHead"><h3>Response deck</h3><span class="tiny">Step 2</span></div>
+            <div class="grid" id="responseGrid"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="sectionHead"><h3>Return-point / backup note</h3><span class="tiny">Step 3</span></div>
+          <div class="grid" id="noteGrid"></div>
+        </div>
+
+        <div class="outcome" id="outcomeBox"></div>
+        <div class="summary" id="summaryBox"></div>
+
+        <div class="actionRow">
+          <button class="warm" id="hearBtn">Read scene aloud</button>
+          <button class="accent" id="voiceBtn">Voice: off</button>
+          <button class="primary" id="nextBtn" disabled>Next scene</button>
+          <button id="resetBtn">Reset run</button>
+          <button id="exportBtn">Save session notes</button>
+        </div>
+      
+  <div class="status" style="margin-top:16px">Designed by Ishan Bangroo. Voice stays optional and inside the current scene.</div>
+</div>
+    </section>
+
+    <section class="panel">
+      <div class="radioHead">
+        <div class="kicker">Quayline desk</div>
+        <h2>Quayline</h2>
+        <p class="subtitle">Quayline stays with the board. It reads the current scene, notices what you marked, and answers with one brief next move grounded in the exchange at hand.</p>
+        <div class="switchboard" id="jackGrid">
+          <div class="jack"><strong>Board state</strong><span id="jackBoard">No line selected yet.</span></div>
+          <div class="jack"><strong>Current move</strong><span id="jackMove">Choose a line first.</span></div>
+          <div class="jack"><strong>Carry-forward pattern</strong><span id="jackBadge">None yet.</span></div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="status" id="statusBox">Ready. Quayline is waiting for the first line to be marked.</div>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+(() => {
+  const scenes = [
+    {
+      id:'handoff',
+      tag:'Scene 1 · Handoff desk',
+      title:'Lines crossing at once',
+      text:'Your shift has barely started. Three channels wake up together: one real handoff, one loud-but-routine alarm, and one tense family callback. The goal is not to satisfy every line at once. The goal is to keep the board honest.',
+      capability:'signal triage + return-point note',
+      speaker:'Quayline',
+      lines:[
+        { id:'callback', title:'Family callback', body:'A relative wants an update and sounds irritated. Important, but the situation is stable.', hint:'social pressure' },
+        { id:'alarm', title:'Pump alarm', body:'The alarm is chirping again. It has already been checked and looks like a tubing snag.', hint:'loud but likely routine' },
+        { id:'arrival', title:'Incoming admission', body:'Transport is two minutes out and nobody has claimed the first handoff yet.', hint:'time-critical handoff' }
+      ],
+      correctLine:'arrival',
+      responses:[
+        { id:'mark-now', title:'Mark the true now line', body:'State what is now, what is next, and what will be parked for a moment.', badge:'Now/Next tag', effects:{clarity:6, motion:4, room:1, score:18}, good:'You stop three simultaneous demands from dressing up as one emergency.' },
+        { id:'apologize-all', title:'Answer everybody fast', body:'Try to placate every line at once so nobody feels ignored.', badge:'', effects:{clarity:-3, room:-2, trust:1, score:4}, good:'The tone stays pleasant, but the board loses structure.' },
+        { id:'chase-loud', title:'Follow the loudest signal', body:'Treat the alarm as the center of the room because it is the noisiest channel.', badge:'', effects:{clarity:-4, motion:-2, score:2}, good:'The loudest signal is still not always the highest priority.' }
+      ],
+      bestResponse:'mark-now',
+      notes:[
+        { id:'return-card', title:'Write a return-point card', body:'Now: admission. Next: callback. After: pump check.', badge:'Return-point card', effects:{clarity:4, room:4, score:12}, good:'Your future self inherits a usable map instead of a blank pause.' },
+        { id:'memory-only', title:'Hold it in your head', body:'Promise yourself you will remember the parked work without leaving a note.', badge:'', effects:{room:-2, clarity:-1, score:3}, good:'That relies too much on memory under pressure.' },
+        { id:'broad-note', title:'Write “handle later”', body:'Leave a vague note that names no order and no owner.', badge:'', effects:{clarity:0, room:1, score:5}, good:'Better than nothing, but still too vague for a clean return.' }
+      ],
+      bestNote:'return-card',
+      intro:'Three lines at once. Mark the line that actually deserves the board, then leave a return-point note that your future self can use.'
+    },
+    {
+      id:'repair',
+      tag:'Scene 2 · Repair without collapse',
+      title:'The harsh inner line',
+      text:'A tiny documentation miss is fixable, but the inner line is yelling that the miss proves you are unreliable. Meanwhile, the desk keeps moving. You need one repair, not a whole identity trial.',
+      capability:'repair framing + continuation',
+      speaker:'Quayline',
+      lines:[
+        { id:'critic', title:'Inner line', body:'“You slipped once, so clearly this whole shift is cursed.”', hint:'global self-attack' },
+        { id:'repair', title:'Correction line', body:'Add one missing detail to the note and confirm the update.', hint:'concrete repair' },
+        { id:'supply', title:'Supply ping', body:'A routine restock prompt can wait fifteen minutes.', hint:'can wait' }
+      ],
+      correctLine:'repair',
+      responses:[
+        { id:'repair-not-identity', title:'Repair the event, not the self', body:'Name the miss, fix the miss, then move on without turning it into a character verdict.', badge:'Honest repair', effects:{clarity:5, trust:4, motion:3, score:18}, good:'You separate a single event from a whole identity story.' },
+        { id:'confess-everything', title:'Over-explain the miss', body:'Turn one miss into a long explanation that slows the room down.', badge:'', effects:{motion:-2, room:-2, trust:1, score:5}, good:'Care matters, but long explanations can stall the room.' },
+        { id:'ignore-it', title:'Skip the repair and push on', body:'Tell yourself momentum matters more than the correction.', badge:'', effects:{trust:-4, clarity:-2, score:2}, good:'Momentum built on an unresolved miss usually breaks later.' }
+      ],
+      bestResponse:'repair-not-identity',
+      notes:[
+        { id:'one-repair-note', title:'Leave a one-repair continuation note', body:'Fix the line, then note the next task in plain language.', badge:'One-repair resume', effects:{room:3, motion:3, score:12}, good:'The note makes the next move concrete.' },
+        { id:'vow-note', title:'Write “never do this again”', body:'Use the note to punish yourself into perfection.', badge:'', effects:{room:-3, clarity:-1, score:3}, good:'Punishment language rarely improves the next move.' },
+        { id:'no-note', title:'Leave no continuation note', body:'Assume the repair is enough and the rest will sort itself out.', badge:'', effects:{motion:0, room:-1, score:5}, good:'The next step still deserves a clear continuation note.' }
+      ],
+      bestNote:'one-repair-note',
+      intro:'This scene is about repair without collapse. Put the repair line on the board, then leave a continuation note instead of a punishment speech.'
+    },
+    {
+      id:'backup',
+      tag:'Scene 3 · Asking backup cleanly',
+      title:'The backup ask',
+      text:'The room is full enough that soloing everything would turn into delay. One named colleague can relieve the pinch, but the inner line keeps arguing that asking for help will read as weakness.',
+      capability:'named help-seeking + concrete handoff',
+      speaker:'Quayline',
+      lines:[
+        { id:'backup-need', title:'Compression point', body:'Two tasks now depend on the same pair of hands and timing is starting to slip.', hint:'real capacity limit' },
+        { id:'shame', title:'Shame line', body:'“If you ask for help, everybody will know you can’t handle your own load.”', hint:'status fear' },
+        { id:'tea', title:'Breakroom chatter', body:'A low-stakes social ping can wait until the board clears.', hint:'non-urgent' }
+      ],
+      correctLine:'backup-need',
+      responses:[
+        { id:'named-ask', title:'Ask one person for one concrete lift', body:'Name the task, the person, and the exact piece you need covered.', badge:'Named backup', effects:{trust:6, room:4, motion:3, score:18}, good:'Specific asks are easier to accept and easier to complete.' },
+        { id:'hint-ask', title:'Drop vague distress signals', body:'Signal distress in broad terms and hope somebody guesses the right lift.', badge:'', effects:{trust:0, room:-1, clarity:-1, score:5}, good:'Vagueness makes help harder to deliver well.' },
+        { id:'martyr', title:'Push through alone', body:'Treat visible strain as proof of dedication and refuse backup.', badge:'', effects:{room:-4, motion:-3, score:2}, good:'Pushing through alone usually worsens the queue.' }
+      ],
+      bestResponse:'named-ask',
+      notes:[
+        { id:'handoff-note', title:'Leave a crisp handoff line', body:'“Jules has meds B and C; I keep intake and admit.”', badge:'Clean handoff', effects:{clarity:4, trust:3, score:12}, good:'Now the board stays legible to more than one person.' },
+        { id:'soft-note', title:'Say “thanks, I’m just busy”', body:'Acknowledge strain without specifying ownership or transfer.', badge:'', effects:{clarity:-1, score:4}, good:'Polite, but still too vague to support a clean transfer.' },
+        { id:'no-handoff', title:'Ask for help with no handoff note', body:'Make the request but leave ownership fuzzy.', badge:'', effects:{trust:1, clarity:-2, score:5}, good:'Help arrives, but ambiguity slows it down.' }
+      ],
+      bestNote:'handoff-note',
+      intro:'This scene is about help-seeking without turning it into a status test. Name the capacity pinch, ask one concrete lift, and leave a clean handoff line.'
+    },
+    {
+      id:'bridgeback',
+      tag:'Scene 4 · Bridge-back plan',
+      title:'Tomorrow’s first ten minutes',
+      text:'The shift is winding down. Tomorrow will still try the same old tricks: false urgency, guilt dressed as responsibility, and the seductive lie that clarity can wait. End with a plan your tired self could actually use.',
+      capability:'bridge-back planning',
+      speaker:'Quayline',
+      lines:[
+        { id:'tomorrow', title:'Known friction', body:'The first ten minutes tomorrow usually arrive with stacked alerts and unclaimed tasks.', hint:'predictable trouble' },
+        { id:'heroics', title:'Discipline-only line', body:'“I will simply try harder next time.”', hint:'vague promise' },
+        { id:'weather', title:'Harbor weather', body:'Useful ambience, not an operational line.', hint:'background only' }
+      ],
+      correctLine:'tomorrow',
+      responses:[
+        { id:'if-then', title:'Write an if-then bridge-back', body:'Choose a cue and a first move that is small enough to survive fatigue.', badge:'Bridge-back plan', effects:{room:5, motion:4, clarity:3, score:18}, good:'Small concrete plans outperform vague promises.' },
+        { id:'general-hope', title:'Promise to be calmer', body:'Aim for a mood without naming a cue or a move.', badge:'', effects:{room:0, score:4}, good:'Too vague to guide the next move.' },
+        { id:'future-scold', title:'Threaten your future self', body:'Use dread as the only planning tool.', badge:'', effects:{room:-3, trust:-1, score:2}, good:'Harsh self-talk does not make the plan more usable.' }
+      ],
+      bestResponse:'if-then',
+      notes:[
+        { id:'specific-plan', title:'If the first three alerts pile up, then mark now / next / noise before replying.', badge:'If-then bridge', effects:{clarity:5, motion:4, score:12}, good:'That is a concrete bridge-back plan with an observable next step.' },
+        { id:'motivational-quote', title:'Write “stay strong and trust yourself.”', badge:'', effects:{score:4}, good:'Pleasant wording, but low routing value.' },
+        { id:'vague-list', title:'List everything to remember tomorrow', badge:'', effects:{room:-2, clarity:-1, score:5}, good:'Comprehensive, yes. Usable under fatigue, not really.' }
+      ],
+      bestNote:'specific-plan',
+      intro:'Final scene. Build a plan for tomorrow that is cue-based and small enough to survive a messy opening.'
+    }
+  ];
+
+  const state = {
+    sceneIndex: 0,
+    clarity: 48,
+    trust: 46,
+    room: 40,
+    motion: 42,
+    score: 0,
+    badges: [],
+    log: [],
+    voice: false,
+    selectedLine: null,
+    selectedResponse: null,
+    selectedNote: null,
+    sceneResolved: false,
+    awaitingQuay: false,
+    finished: false,
+    bridgeBack: null,
+    llmMode: 'local-fallback',
+    sceneResults: []
+  };
+
+  const els = {
+    clarityText: document.getElementById('clarityText'),
+    trustText: document.getElementById('trustText'),
+    roomText: document.getElementById('roomText'),
+    motionText: document.getElementById('motionText'),
+    scoreText: document.getElementById('scoreText'),
+    sceneDots: document.getElementById('sceneDots'),
+    sceneTag: document.getElementById('sceneTag'),
+    sceneTitle: document.getElementById('sceneTitle'),
+    sceneText: document.getElementById('sceneText'),
+    lineGrid: document.getElementById('lineGrid'),
+    responseGrid: document.getElementById('responseGrid'),
+    noteGrid: document.getElementById('noteGrid'),
+    outcomeBox: document.getElementById('outcomeBox'),
+    summaryBox: document.getElementById('summaryBox'),
+    focusCard: document.getElementById('focusCard'),
+    hearBtn: document.getElementById('hearBtn'),
+    voiceBtn: document.getElementById('voiceBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    statusBox: document.getElementById('statusBox'),
+    log: document.getElementById('log'),
+    jackBoard: document.getElementById('jackBoard'),
+    jackMove: document.getElementById('jackMove'),
+    jackBadge: document.getElementById('jackBadge'),
+    lightRow: document.getElementById('lightRow')
+  };
+
+  function clamp(v){ return Math.max(0, Math.min(100, Math.round(v))); }
+  function currentScene(){ return scenes[Math.min(state.sceneIndex, scenes.length - 1)]; }
+  function setStatus(text){ els.statusBox.textContent = text; }
+  function escapeHTML(text){
+    return String(text ?? '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+  }
+
+  function speak(text){
+    if (!state.voice || !('speechSynthesis' in window) || !text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1;
+    u.pitch = 1;
+    window.speechSynthesis.speak(u);
+  }
+
+  function pushLog(kind, title, body){
+    state.log.unshift({ kind, title, body, time: new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) });
+    renderLog();
+  }
+
+  function renderLog(){
+    els.log.innerHTML = state.log.map(item => `
+      <div class="msg ${escapeHTML(item.kind)}">
+        <div class="meta">${escapeHTML(item.time)} · ${escapeHTML(item.title)}</div>
+        <div>${escapeHTML(item.body)}</div>
+      </div>`).join('');
+  }
+
+  function renderMeters(){
+    els.clarityText.textContent = state.clarity;
+    els.trustText.textContent = state.trust;
+    els.roomText.textContent = state.room;
+    els.motionText.textContent = state.motion;
+    els.scoreText.textContent = state.score;
+  }
+
+  function renderDots(){
+    els.sceneDots.innerHTML = scenes.map((_, i) => {
+      const cls = i < state.sceneIndex ? 'dot done' : (i === state.sceneIndex ? 'dot now' : 'dot');
+      return `<div class="${cls}"></div>`;
+    }).join('');
+  }
+
+  function renderLights(step){
+    const bulbs = Array.from(els.lightRow.querySelectorAll('.bulb'));
+    bulbs.forEach((b, i) => b.classList.toggle('active', i <= step));
+  }
+
+  function renderJack(lineText, moveText, badgeText){
+    els.jackBoard.textContent = lineText;
+    els.jackMove.textContent = moveText;
+    els.jackBadge.textContent = badgeText;
+  }
+
+  function mergeEffects(target, source){
+    for (const key of ['clarity','trust','room','motion','score']) {
+      if (source[key]) target[key] = (target[key] || 0) + source[key];
+    }
+  }
+
+  function applyEffects(e){
+    state.clarity = clamp(state.clarity + (e.clarity || 0));
+    state.trust = clamp(state.trust + (e.trust || 0));
+    state.room = clamp(state.room + (e.room || 0));
+    state.motion = clamp(state.motion + (e.motion || 0));
+    state.score = Math.max(0, state.score + (e.score || 0));
+  }
+
+  function summarizeStyle(){
+    const metrics = [
+      ['clarity', state.clarity],
+      ['trust', state.trust],
+      ['room', state.room],
+      ['motion', state.motion]
+    ].sort((a,b) => b[1]-a[1]);
+    const top = metrics[0][0];
+    if (top === 'clarity') return 'Board keeper';
+    if (top === 'trust') return 'Crew stabilizer';
+    if (top === 'room') return 'Space maker';
+    return 'Momentum broker';
+  }
+
+  function buildSummary(){
+    const style = summarizeStyle();
+    const badgeText = state.badges.length ? state.badges.join(' · ') : 'No strong pattern carried forward this run.';
+    const plan = state.bridgeBack || 'No bridge-back plan captured.';
+    els.summaryBox.style.display = 'block';
+    els.summaryBox.innerHTML = `
+      <div class="kicker" style="color:#7a5c80">Run complete</div>
+      <h2>Your switchboard style: ${style}</h2>
+      <p class="subtitle" style="margin:10px 0 0;max-width:none">You kept the board readable by naming the real line, choosing a usable response, and leaving a return point the next shift can trust.</p>
+      <div class="summaryGrid">
+        <div class="summaryCard"><strong>Carry-forward patterns</strong><div class="tiny" style="margin-top:6px">${badgeText}</div></div>
+        <div class="summaryCard"><strong>Bridge-back plan</strong><div class="tiny" style="margin-top:6px">${plan}</div></div>
+        <div class="summaryCard"><strong>Strongest meter</strong><div class="tiny" style="margin-top:6px">${style} · Score ${state.score}</div></div>
+        <div class="summaryCard"><strong>Suggested next stop</strong><div class="tiny" style="margin-top:6px">Open Ward Relay for the desk-board version of the same habit.</div></div>
+      </div>`;
+  }
+
+  function renderScene(){
+    const scene = currentScene();
+    renderMeters();
+    renderDots();
+    els.sceneTag.textContent = scene.tag;
+    els.sceneTitle.textContent = scene.title;
+    els.sceneText.textContent = scene.text;
+    els.outcomeBox.style.display = state.sceneResolved ? 'block' : 'none';
+    els.nextBtn.disabled = !state.sceneResolved || state.awaitingQuay;
+    if (state.finished) { buildSummary(); return; }
+    els.summaryBox.style.display = 'none';
+
+    els.lineGrid.innerHTML = scene.lines.map(line => {
+      const active = state.selectedLine === line.id ? 'active' : '';
+      const disabled = state.sceneResolved ? 'disabled' : '';
+      return `<button class="lineBtn ${active}" data-kind="line" data-id="${line.id}" ${disabled}>
+        <strong>${line.title}</strong>
+        <small>${line.body}</small>
+        <div class="lineMeta"><span class="tinyTag">${line.hint}</span></div>
+      </button>`;
+    }).join('');
+
+    els.responseGrid.innerHTML = scene.responses.map(item => {
+      const active = state.selectedResponse === item.id ? 'active' : '';
+      const disabled = (state.selectedLine === null || state.sceneResolved) ? 'disabled' : '';
+      return `<button class="responseBtn ${active}" data-kind="response" data-id="${item.id}" ${disabled}>
+        <strong>${item.title}</strong>
+        <small>${item.body}</small>
+      </button>`;
+    }).join('');
+
+    els.noteGrid.innerHTML = scene.notes.map(item => {
+      const active = state.selectedNote === item.id ? 'active' : '';
+      const disabled = (state.selectedResponse === null || state.sceneResolved) ? 'disabled' : '';
+      return `<button class="noteBtn ${active}" data-kind="note" data-id="${item.id}" ${disabled}>
+        <strong>${item.title}</strong>
+        <small>${item.body}</small>
+      </button>`;
+    }).join('');
+
+    if (state.selectedLine === null) {
+      els.focusCard.textContent = 'Step 1: Mark the line that actually deserves the board.';
+      renderLights(0);
+      renderJack('No line selected yet.', 'Choose the board line first.', state.badges.length ? state.badges[state.badges.length-1] : 'None yet.');
+    } else if (state.selectedResponse === null) {
+      els.focusCard.textContent = 'Step 2: Choose one operational response card.';
+      renderLights(1);
+      renderJack(`Board line: ${scene.lines.find(l => l.id === state.selectedLine).title}`, 'Pick the response card that keeps the exchange usable.', state.badges.length ? state.badges[state.badges.length-1] : 'None yet.');
+    } else if (state.selectedNote === null) {
+      els.focusCard.textContent = 'Step 3: Leave a return-point or backup note.';
+      renderLights(2);
+      renderJack(`Board line: ${scene.lines.find(l => l.id === state.selectedLine).title}`, `Move: ${scene.responses.find(r => r.id === state.selectedResponse).title}`, state.badges.length ? state.badges[state.badges.length-1] : 'None yet.');
+    } else {
+      renderLights(2);
+    }
+  }
+
+  function choose(kind, id){
+    if (state.sceneResolved || state.finished) return;
+    const scene = currentScene();
+    if (kind === 'line') {
+      state.selectedLine = id;
+      setStatus('Primary line marked. Choose a response card.');
+      pushLog('player', 'Board line', scene.lines.find(l => l.id === id).title);
+      renderScene();
+      return;
+    }
+    if (kind === 'response' && state.selectedLine !== null) {
+      state.selectedResponse = id;
+      setStatus('Response deck armed. Leave a return-point or backup note.');
+      pushLog('player', 'Response card', scene.responses.find(r => r.id === id).title);
+      renderScene();
+      return;
+    }
+    if (kind === 'note' && state.selectedResponse !== null) {
+      state.selectedNote = id;
+      pushLog('note', 'Board note', scene.notes.find(n => n.id === id).title);
+      resolveScene();
+    }
+  }
+
+  async function resolveScene(){
+    const scene = currentScene();
+    const line = scene.lines.find(l => l.id === state.selectedLine);
+    const response = scene.responses.find(r => r.id === state.selectedResponse);
+    const note = scene.notes.find(n => n.id === state.selectedNote);
+    const effects = { clarity:0, trust:0, room:0, motion:0, score:0 };
+    const parts = [];
+    const rightLine = state.selectedLine === scene.correctLine;
+
+    if (rightLine) {
+      effects.clarity += 5;
+      effects.motion += 2;
+      effects.score += 15;
+      parts.push(`You put <strong>${line.title}</strong> on the board first, which keeps the room from treating noise and priority as the same thing.`);
+    } else {
+      effects.clarity -= 4;
+      effects.room -= 2;
+      effects.score += 2;
+      parts.push(`You opened the board on <strong>${line.title}</strong> first. That burns energy on the wrong channel and makes the real work louder.`);
+    }
+
+    mergeEffects(effects, response.effects || {});
+    mergeEffects(effects, note.effects || {});
+    parts.push(response.good);
+    parts.push(note.good);
+
+    const perfect = rightLine && response.id === scene.bestResponse && note.id === scene.bestNote;
+    if (perfect) {
+      effects.trust += 4;
+      effects.room += 3;
+      effects.score += 10;
+      if (response.badge && !state.badges.includes(response.badge)) state.badges.push(response.badge);
+      if (note.badge && !state.badges.includes(note.badge)) state.badges.push(note.badge);
+      parts.push('The exchange lands cleanly. The board feels settled instead of open-ended.');
+    } else {
+      if (response.badge && response.id === scene.bestResponse && !state.badges.includes(response.badge)) state.badges.push(response.badge);
+      if (note.badge && note.id === scene.bestNote && !state.badges.includes(note.badge)) state.badges.push(note.badge);
+    }
+
+    if (scene.id === 'bridgeback' && note.id === 'specific-plan') {
+      state.bridgeBack = note.title.replace(/\.$/,'');
+    } else if (scene.id === 'bridgeback') {
+      state.bridgeBack = note.title;
+    }
+
+    applyEffects(effects);
+    state.sceneResolved = true;
+    state.awaitingQuay = true;
+    renderJack(`Board line: ${line.title}`, `Move: ${response.title}`, state.badges.length ? state.badges[state.badges.length-1] : 'None yet.');
+    renderOutcome(parts, 'Quayline is checking the board…', 'connecting');
+    setStatus('Scene resolved. Quayline is listening.');
+    renderScene();
+
+    const quayResult = await fetchQuayReply(scene, line, response, note, rightLine, perfect);
+    state.llmMode = quayResult.source;
+    state.awaitingQuay = false;
+    renderOutcome(parts, quayResult.reply, quayResult.source);
+    setStatus(quayResult.source === 'workers-ai'
+      ? 'Scene resolved. Quayline replied.'
+      : 'Scene resolved locally.');
+    pushLog('quay', scene.speaker, quayResult.reply);
+    if (state.voice) speak(quayResult.reply);
+    state.sceneResults.push({ scene: scene.id, line: line.id, response: response.id, note: note.id, perfect, debriefSource: quayResult.source });
+    renderScene();
+  }
+
+  function buildQuayReply(scene, line, response, note, rightLine, perfect){
+    const open = rightLine ? 'You chose the right line to center.' : 'You let the wrong line seize the board first.';
+    const middle = response.id === scene.bestResponse ? `The response card ${response.title.toLowerCase()} was the stabilizing move here.` : `The response card ${response.title.toLowerCase()} kept some motion, but it did not cut the knot cleanly.`;
+    const close = note.id === scene.bestNote ? `The note ${note.title.toLowerCase()} gives the next version of you a usable return point.` : `The note ${note.title.toLowerCase()} leaves too much ambiguity for a clean return.`;
+    const bonus = perfect ? 'Carry that pattern forward. Small explicit structure beats improvised recovery.' : 'Still workable. The point is not perfection. The point is to make the board legible again.';
+    return `${open} ${middle} ${close} ${bonus}`;
+  }
+
+  function renderOutcome(parts, quay, source){
+    const label = source === 'connecting' ? 'Quayline is listening…' : '';
+    els.outcomeBox.style.display = 'block';
+    const safeParts = parts.map(part => String(part).replace(/<strong>(.*?)<\/strong>/g, (_, inner) => `<strong>${escapeHTML(inner)}</strong>`));
+    els.outcomeBox.innerHTML = `<strong>Quayline closeout</strong><p style="margin:.65rem 0 0;line-height:1.58">${safeParts.join(' ')}</p><p style="margin:.8rem 0 0;line-height:1.58"><em>${escapeHTML(quay)}</em></p>${label ? `<p class="tiny" style="margin:.85rem 0 0">${escapeHTML(label)}</p>` : ''}`;
+  }
+
+  async function fetchQuayReply(scene, line, response, note, rightLine, perfect){
+    const fallback = buildQuayReply(scene, line, response, note, rightLine, perfect);
+    if (location.protocol === 'file:') {
+      return { reply: fallback, source: 'local-fallback' };
+    }
+    try {
+      const res = await fetch('/api/quayline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sceneId: scene.id,
+          sceneTitle: scene.title,
+          sceneText: scene.text,
+          selectedLine: line.title,
+          selectedLineBody: line.body,
+          selectedResponse: response.title,
+          selectedResponseBody: response.body,
+          selectedNote: note.title,
+          selectedNoteBody: note.body,
+          rightLine,
+          perfect,
+          score: state.score,
+          metrics: {
+            clarity: state.clarity,
+            trust: state.trust,
+            room: state.room,
+            motion: state.motion
+          },
+          badges: state.badges.slice(-3)
+        })
+      });
+      if (!res.ok) throw new Error('Quayline request failed');
+      const data = await res.json();
+      const reply = typeof data?.reply === 'string' ? data.reply.trim() : '';
+      if (!reply) throw new Error('Empty reply');
+      return { reply, source: data?.source || 'workers-ai' };
+    } catch (err) {
+      return { reply: fallback, source: 'local-fallback' };
+    }
+  }
+
+  function nextScene(){
+    if (!state.sceneResolved) return;
+    if (state.sceneIndex >= scenes.length - 1) {
+      state.finished = true;
+      renderScene();
+      return;
+    }
+    state.sceneIndex += 1;
+    state.selectedLine = null;
+    state.selectedResponse = null;
+    state.selectedNote = null;
+    state.sceneResolved = false;
+    els.outcomeBox.style.display = 'none';
+    els.outcomeBox.innerHTML = '';
+    setStatus('Next scene loaded. Mark the new board line.');
+    renderScene();
+  }
+
+  function resetGame(){
+    state.sceneIndex = 0;
+    state.clarity = 48;
+    state.trust = 46;
+    state.room = 40;
+    state.motion = 42;
+    state.score = 0;
+    state.badges = [];
+    state.log = [];
+    state.selectedLine = null;
+    state.selectedResponse = null;
+    state.selectedNote = null;
+    state.sceneResolved = false;
+    state.awaitingQuay = false;
+    state.finished = false;
+    state.bridgeBack = null;
+    state.llmMode = 'local-fallback';
+    state.sceneResults = [];
+    els.outcomeBox.innerHTML = '';
+    els.outcomeBox.style.display = 'none';
+    els.summaryBox.style.display = 'none';
+    setStatus('Scene 1 example: mark Incoming admission, choose Mark the true now line, then Write a return-point card.');
+    pushLog('quay', 'Quayline', 'Board reset. Mark the line that actually deserves the board.');
+    renderScene();
+  }
+
+  function exportSession(){
+    const payload = {
+      game:'Kindline Switchboard',
+      sceneIndex: state.sceneIndex,
+      score: state.score,
+      llmMode: state.llmMode,
+      metrics: { clarity: state.clarity, trust: state.trust, room: state.room, motion: state.motion },
+      badges: state.badges,
+      bridgeBack: state.bridgeBack,
+      results: state.sceneResults,
+      log: state.log
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kindline_switchboard_session_notes.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 600);
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-kind]');
+    if (!btn) return;
+    choose(btn.dataset.kind, btn.dataset.id);
+  });
+  els.hearBtn.addEventListener('click', () => speak(currentScene().intro));
+  els.voiceBtn.addEventListener('click', () => {
+    state.voice = !state.voice;
+    els.voiceBtn.textContent = 'Voice: ' + (state.voice ? 'on' : 'off');
+    if (!state.voice && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+  els.nextBtn.addEventListener('click', nextScene);
+  els.resetBtn.addEventListener('click', resetGame);
+  els.exportBtn.addEventListener('click', exportSession);
+
+  pushLog('quay', 'Quayline', 'Switchboard online. Mark the real line, route the move, and leave a clean return point.');
+  renderScene();
+
+  window.__ShiftworksTest = {
+    module: 'kindline_switchboard',
+    getState: () => ({ sceneIndex: state.sceneIndex, selectedLine: state.selectedLine, selectedResponse: state.selectedResponse, selectedNote: state.selectedNote, score: state.score, finished: state.finished, sceneResolved: state.sceneResolved }),
+    choose, nextScene, resetGame, currentScene: () => currentScene().id
+  };
+})();
+</script>
+</body>
+</html>
